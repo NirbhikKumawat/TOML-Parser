@@ -1,6 +1,8 @@
 pub mod config_error;
 pub mod lexer;
 pub mod token;
+pub mod toml_value;
+pub mod parser;
 
 #[derive(Debug, thiserror::Error)]
 enum ConfigError {
