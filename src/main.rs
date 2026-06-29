@@ -1,65 +1,82 @@
-pub mod config_error;
-pub mod lexer;
-pub mod parser;
-pub mod token;
-pub mod toml_value;
-pub mod field;
-pub mod schema;
+use std::fs;
+use toml::config_error::{ConfigError, format_error};
+use toml::lexer::Lexer;
+use toml::parser::Parser;
+use toml::schema::{flatten_table, parse_schema, validate};
+use toml::toml_value::display;
 
-#[derive(Debug, thiserror::Error)]
-enum ConfigError {
-    #[error(
-        "unexpected character at line {line}, column {col}: expected {expected}, found '{found}'"
-    )]
-    UnexpectedCharacter {
-        line: usize,
-        col: usize,
-        expected: String,
-        found: String,
-    },
-    #[error("unterminated string starting at line {line}, column {col}")]
-    UnterminatedString { line: usize, col: usize },
-    #[error("invalid number at line {line}, column {col}: {detail}")]
-    InvalidNumber {
-        line: usize,
-        col: usize,
-        detail: String,
-    },
-    #[error("expected {expected} at line {line}, column {col}, found {found}")]
-    ExpectedToken {
-        line: usize,
-        col: usize,
-        expected: String,
-        found: String,
-    },
-    #[error("missing value for key '{key}' at line {line}, column {col}")]
-    MissingValue {
-        line: usize,
-        col: usize,
-        key: String,
-    },
-    #[error("schema violation at line {line}: key '{key}' expected type {expected}, found {found}")]
-    SchemaViolation {
-        line: usize,
-        key: String,
-        expected: String,
-        found: String,
-    },
-    #[error("missing required key '{key}'")]
-    MissingRequiredKey { key: String },
-    #[error("key '{key}' has value {value} which is outside range {min} to {max}")]
-    ValueOutOfRange {
-        key: String,
-        value: String,
-        min: i64,
-        max: i64,
-    },
-    #[error("unknown key '{key}' at line {line}")]
-    UnknownKey { key: String, line: usize },
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
+fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
+    let config_source = match fs::read_to_string(config_path) {
+        Ok(s) => s,
+        Err(e) => return Err(vec![ConfigError::from(e)]),
+    };
+    let schema_source = match fs::read_to_string(schema_path) {
+        Ok(s) => s,
+        Err(e) => return Err(vec![ConfigError::from(e)]),
+    };
+
+    let mut config_lexer = Lexer::new(&config_source);
+    let config_tokens = match config_lexer.tokenize() {
+        Ok(tokens) => tokens,
+        Err(e) => return Err(vec![e]),
+    };
+    let mut config_parser = Parser::new(config_tokens);
+    let config_value = match config_parser.parse() {
+        Ok(v) => v,
+        Err(e) => return Err(vec![e]),
+    };
+
+    let mut schema_lexer = Lexer::new(&schema_source);
+    let schema_tokens = match schema_lexer.tokenize() {
+        Ok(tokens) => tokens,
+        Err(e) => return Err(vec![e]),
+    };
+    let mut schema_parser = Parser::new(schema_tokens);
+    let schema_value = match schema_parser.parse() {
+        Ok(v) => v,
+        Err(e) => return Err(vec![e]),
+    };
+
+    let schema = match parse_schema(&schema_value) {
+        Ok(s) => s,
+        Err(e) => return Err(vec![e]),
+    };
+
+    validate(&config_value, &schema, &config_source)?;
+    println!("Config is valid!");
+    println!();
+    println!("Parsed config:");
+    for (key, value) in flatten_table(&config_value, "") {
+        println!("  {} = {}", key, display(&value));
+    }
+
+    Ok(())
 }
 
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = std::env::args().collect();
+
+    let (config_path, schema_path) = if args.len() >= 3 {
+        (args[1].clone(), args[2].clone())
+    } else {
+        (
+            String::from("examples/valid_config.toml"),
+            String::from("examples/schema.toml"),
+        )
+    };
+
+    match run(&config_path, &schema_path) {
+        Ok(()) => {}
+        Err(errors) => {
+            let source = match fs::read_to_string(&config_path) {
+                Ok(s) => s,
+                Err(_) => String::new(),
+            };
+            for err in &errors {
+                eprintln!("{}", format_error(err, &source));
+                eprintln!();
+            }
+            std::process::exit(1);
+        }
+    }
 }

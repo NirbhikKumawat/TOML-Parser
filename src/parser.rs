@@ -1,15 +1,15 @@
-use crate::ConfigError;
+use crate::config_error::ConfigError;
 use crate::token::{SpannedToken, TokenKind};
 use crate::toml_value::TomlValue;
 
 #[derive(Debug, Clone)]
-struct Parser {
+pub struct Parser {
     tokens: Vec<SpannedToken>,
     pos: usize,
 }
 
 impl Parser {
-    fn new(tokens: Vec<SpannedToken>) -> Self {
+    pub fn new(tokens: Vec<SpannedToken>) -> Self {
         Self { tokens, pos: 0 }
     }
     fn current(&self) -> Option<&SpannedToken> {
@@ -73,7 +73,7 @@ impl Parser {
             }),
         }
     }
-    fn parse(&mut self) -> Result<TomlValue, ConfigError> {
+    pub fn parse(&mut self) -> Result<TomlValue, ConfigError> {
         let mut pairs: Vec<(String, TomlValue)> = Vec::new();
 
         while let Some(token) = self.current() {

@@ -1,15 +1,15 @@
-use crate::ConfigError;
+use crate::config_error::ConfigError;
 use crate::token::{SpannedToken, TokenKind};
 
 #[derive(Debug)]
-struct Lexer {
+pub struct Lexer {
     input: Vec<u8>,
     pos: usize,
     line: usize,
     col: usize,
 }
 impl Lexer {
-    fn new(input: &str) -> Self {
+    pub fn new(input: &str) -> Self {
         Self {
             input: input.as_bytes().to_vec(),
             pos: 0,
@@ -51,7 +51,7 @@ impl Lexer {
             }
         }
     }
-    fn tokenize(&mut self) -> Result<Vec<SpannedToken>, ConfigError> {
+    pub fn tokenize(&mut self) -> Result<Vec<SpannedToken>, ConfigError> {
         let mut tokens = Vec::new();
         while let Some(c) = self.current() {
             match c {

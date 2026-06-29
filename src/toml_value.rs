@@ -8,7 +8,7 @@ pub enum TomlValue {
     Table(Vec<(String, TomlValue)>),
 }
 
-fn display(value: &TomlValue) -> String {
+pub fn display(value: &TomlValue) -> String {
     match value {
         TomlValue::String(s) => format!("\"{}\"", s),
         TomlValue::Integer(i) => format!("{}", i),

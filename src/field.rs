@@ -1,6 +1,6 @@
 use crate::toml_value::TomlValue;
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum FieldType {
     Boolean,
     Integer,
@@ -35,6 +35,5 @@ pub struct FieldSchema {
     pub(crate) min: Option<i64>,
     pub(crate) max: Option<i64>,
 }
-
 
 pub type Schema = Vec<(String, FieldSchema)>;
