@@ -232,10 +232,8 @@ impl Lexer {
                         }
                         _ => {
                             let found = match self.current() {
-                                Some(b) => {
-                                    (b as char).to_string()
-                                }
-                                None => String::from("end of input")
+                                Some(b) => (b as char).to_string(),
+                                None => String::from("end of input"),
                             };
                             return Err(ConfigError::UnexpectedCharacter {
                                 line: self.line,
@@ -266,7 +264,7 @@ impl Lexer {
 
         loop {
             match self.current() {
-                Some(c@b'0'..=b'9') => {
+                Some(c @ b'0'..=b'9') => {
                     s.push(c as char);
                     self.advance();
                 }
@@ -296,19 +294,19 @@ impl Lexer {
                     });
                 }
             };
-            Ok((TokenKind::Float(value),start_line,start_col))
-        }else{
-            let value:i64 = match s.parse() {
+            Ok((TokenKind::Float(value), start_line, start_col))
+        } else {
+            let value: i64 = match s.parse() {
                 Ok(v) => v,
                 Err(_) => {
                     return Err(ConfigError::InvalidNumber {
                         line: start_line,
                         col: start_col,
-                        detail: format!("cannot parse '{}' as integer",s),
+                        detail: format!("cannot parse '{}' as integer", s),
                     });
                 }
             };
-            Ok((TokenKind::Integer(value),start_line,start_col))
+            Ok((TokenKind::Integer(value), start_line, start_col))
         }
     }
     fn read_identifier(&mut self) -> (String, usize, usize) {
@@ -319,7 +317,7 @@ impl Lexer {
             if is_alpha(c) || is_digit(c) || c == b'_' || c == b'-' {
                 result.push(c as char);
                 self.advance();
-            }else{
+            } else {
                 break;
             }
         }

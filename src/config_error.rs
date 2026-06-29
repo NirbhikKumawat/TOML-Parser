@@ -51,3 +51,33 @@ pub enum ConfigError {
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
 }
+fn format_error(err: &ConfigError,source: &str) -> String {
+    let line_num = match err {
+        ConfigError::UnexpectedCharacter { line, .. } => *line,
+        ConfigError::UnterminatedString { line, .. } => *line,
+        ConfigError::InvalidNumber { line, .. } => *line,
+        ConfigError::ExpectedToken { line, .. } => *line,
+        ConfigError::MissingValue { line, .. } => *line,
+        ConfigError::SchemaViolation { line, .. } => *line,
+        ConfigError::UnknownKey { line, .. } => *line,
+        _ => 0,
+    };
+
+    if line_num == 0 {
+        return format!("Error: {}", err);
+    }
+
+    let lines: Vec<&str> = source.lines().collect();
+    let line_content = match lines.get(line_num - 1) {
+        Some(line) => *line,
+        None => ""
+    };
+
+    format!(
+        "Error: {}\n   |\n{:>2} | {}\n   |",
+        err,
+        line_num,
+        line_content
+    )
+
+}

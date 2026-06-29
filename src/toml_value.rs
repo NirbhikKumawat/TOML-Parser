@@ -34,7 +34,7 @@ fn display(value: &TomlValue) -> String {
                 if !first {
                     result.push_str(", ");
                 }
-                result.push_str(&format!("{}: {}",key,display(value)));
+                result.push_str(&format!("{}: {}", key, display(value)));
                 first = false;
             }
             result.push_str("}");
@@ -42,7 +42,7 @@ fn display(value: &TomlValue) -> String {
         }
     }
 }
-fn toml_type_name(value: &TomlValue) -> &'static str {
+pub fn toml_type_name(value: &TomlValue) -> &'static str {
     match value {
         TomlValue::String(_) => "string",
         TomlValue::Integer(_) => "integer",

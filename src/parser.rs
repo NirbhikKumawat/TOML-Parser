@@ -12,10 +12,10 @@ impl Parser {
     fn new(tokens: Vec<SpannedToken>) -> Self {
         Self { tokens, pos: 0 }
     }
-    fn current(&self) ->Option<&SpannedToken> {
+    fn current(&self) -> Option<&SpannedToken> {
         if self.pos < self.tokens.len() {
             Some(&self.tokens[self.pos])
-        }else{
+        } else {
             None
         }
     }
@@ -27,14 +27,14 @@ impl Parser {
     fn skip_newlines(&mut self) {
         while let Some(token) = self.current() {
             match &token.kind {
-                TokenKind::NewLine|TokenKind::Comment(_) => {
+                TokenKind::NewLine | TokenKind::Comment(_) => {
                     self.advance();
                 }
                 _ => break,
             }
         }
     }
-    fn parse_value(&mut self) -> Result<TomlValue,ConfigError> {
+    fn parse_value(&mut self) -> Result<TomlValue, ConfigError> {
         let token = self.current();
         match token {
             Some(t) => match &t.kind {
@@ -62,23 +62,23 @@ impl Parser {
                     line: t.line,
                     col: t.col,
                     expected: "value (string, integer, float, or boolean)".to_string(),
-                    found: format!("{:?}",t.kind)
-                })
-            }
+                    found: format!("{:?}", t.kind),
+                }),
+            },
             None => Err(ConfigError::ExpectedToken {
                 line: 0,
                 col: 0,
                 expected: "value".to_string(),
                 found: "end of input".to_string(),
-            })
+            }),
         }
     }
-    fn parse(&mut self) -> Result<TomlValue,ConfigError> {
+    fn parse(&mut self) -> Result<TomlValue, ConfigError> {
         let mut pairs: Vec<(String, TomlValue)> = Vec::new();
 
         while let Some(token) = self.current() {
             match &token.kind {
-                TokenKind::Comment(_)|TokenKind::NewLine => {
+                TokenKind::Comment(_) | TokenKind::NewLine => {
                     self.advance();
                 }
                 TokenKind::TableHeader(section) => {
@@ -90,7 +90,7 @@ impl Parser {
 
                     while let Some(t) = self.current() {
                         match &t.kind {
-                            TokenKind::Comment(_)|TokenKind::NewLine => {
+                            TokenKind::Comment(_) | TokenKind::NewLine => {
                                 self.advance();
                             }
                             TokenKind::TableHeader(_) => {
@@ -103,15 +103,15 @@ impl Parser {
 
                                 let eq_token = self.current();
                                 match eq_token {
-                                   Some(eq) if eq.kind == TokenKind::Equal => {
-                                       self.advance();
-                                   }
+                                    Some(eq) if eq.kind == TokenKind::Equal => {
+                                        self.advance();
+                                    }
                                     Some(eq) => {
                                         return Err(ConfigError::ExpectedToken {
                                             line: eq.line,
                                             col: eq.col,
                                             expected: "=".to_string(),
-                                            found: format!("{:?}",eq.kind)
+                                            found: format!("{:?}", eq.kind),
                                         });
                                     }
                                     None => {
@@ -132,12 +132,12 @@ impl Parser {
                                     line: t.line,
                                     col: t.col,
                                     expected: "key or table header".to_string(),
-                                    found: format!("{:?}",t.kind),
+                                    found: format!("{:?}", t.kind),
                                 });
                             }
                         }
                     }
-                    pairs.push((section_name,TomlValue::Table(section_pairs)));
+                    pairs.push((section_name, TomlValue::Table(section_pairs)));
                 }
                 TokenKind::Identifier(key) => {
                     let key_str = key.clone();
@@ -154,7 +154,7 @@ impl Parser {
                                 line: t.line,
                                 col: t.col,
                                 expected: "=".to_string(),
-                                found: format!("{:?}",t.kind)
+                                found: format!("{:?}", t.kind),
                             });
                         }
                         None => {
