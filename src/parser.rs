@@ -134,88 +134,18 @@ impl Parser {
     }
     pub fn parse(&mut self) -> Result<TomlValue, ConfigError> {
         let mut pairs: HashMap<String, TomlValue> = HashMap::new();
-        while let Some(token) = self.current() {
+        let mut current_path: Vec<String> = Vec::new();
+        while let Some(token) = self.current().cloned() {
             match &token.kind {
                 TokenKind::Comment(_) | TokenKind::NewLine => {
                     self.advance();
                 }
                 TokenKind::LBracket => {
-                    self.advance();
-                    let mut expect_dot = false;
-                    let mut dotted: Vec<String> = Vec::new();
-                    while let Some(token) = self.current().cloned() {
-                        if expect_dot {
-                            match token.kind {
-                                TokenKind::RBracket => {
-                                    self.advance();
-                                    break;
-                                }
-                                TokenKind::Dot => {
-                                    expect_dot = false;
-                                    self.advance();
-                                }
-                                _ => {
-                                    return Err(ConfigError::ExpectedToken {
-                                        line: token.line,
-                                        col: token.col,
-                                        expected: "'.' or ']'".to_string(),
-                                        found: format!("{:?}", token.kind),
-                                    });
-                                }
-                            }
-                        } else {
-                            match token.kind {
-                                TokenKind::Identifier(t) => {
-                                    dotted.push(t);
-                                    expect_dot = true;
-                                    self.advance();
-                                }
-                                TokenKind::StringLit(t) => {
-                                    dotted.push(t);
-                                    expect_dot = true;
-                                    self.advance();
-                                }
-                                _ => {
-                                    return Err(ConfigError::ExpectedToken {
-                                        line: token.line,
-                                        col: token.col,
-                                        expected: "string or identifier".to_string(),
-                                        found: format!("{:?}", token.kind),
-                                    });
-                                }
-                            }
-                        }
-                    }
+                    current_path = self.parse_table_header()?;
                 }
-                TokenKind::Identifier(key) => {
-                    let key_str = key.clone();
-                    let key_line = token.line;
+                TokenKind::Identifier(key)|TokenKind::StringLit(key) => {
                     self.advance();
-
-                    let eq_token = self.current();
-                    match eq_token {
-                        Some(t) if t.kind == TokenKind::Equal => {
-                            self.advance();
-                        }
-                        Some(t) => {
-                            return Err(ConfigError::ExpectedToken {
-                                line: t.line,
-                                col: t.col,
-                                expected: "=".to_string(),
-                                found: format!("{:?}", t.kind),
-                            });
-                        }
-                        None => {
-                            return Err(ConfigError::MissingValue {
-                                line: key_line,
-                                col: 1,
-                                key: key_str,
-                            });
-                        }
-                    }
-                    let value = self.parse_value()?;
-                    pairs.insert(key_str, value);
-                    self.skip_newlines();
+                    self.parse_key_value(&current_path, key, &mut pairs)?;
                 }
                 _ => {
                     return Err(ConfigError::UnexpectedCharacter {
@@ -228,5 +158,109 @@ impl Parser {
             }
         }
         Ok(TomlValue::Table(pairs))
+    }
+    fn parse_table_header(&mut self) -> Result<Vec<String>, ConfigError> {
+        self.advance();
+        let mut expect_dot = false;
+        let mut dotted: Vec<String> = Vec::new();
+        let mut line = 0;
+        let mut col = 0;
+        while let Some(token) = self.current().cloned() {
+            if expect_dot {
+                match &token.kind {
+                    TokenKind::RBracket => {
+                        self.advance();
+                        return Ok(dotted)
+                    }
+                    TokenKind::Dot => {
+                        expect_dot = false;
+                        self.advance();
+                    }
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: token.line,
+                            col: token.col,
+                            expected: "'.' or ']'".to_string(),
+                            found: format!("{:?}", token.kind),
+                        });
+                    }
+                }
+            }else{
+                match &token.kind {
+                    TokenKind::Identifier(t) => {
+                        dotted.push(t.clone());
+                        expect_dot = true;
+                        self.advance();
+                    }
+                    TokenKind::StringLit(t) => {
+                        dotted.push(t.clone());
+                        expect_dot = true;
+                        self.advance();
+                    }
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: token.line,
+                            col: token.col,
+                            expected: "string or identifier".to_string(),
+                            found: format!("{:?}", token.kind),
+                        });
+                    }
+                }
+            }
+            line = token.line;
+            col = token.col;
+        }
+        Err(ConfigError::ExpectedToken {
+            line,
+            col,
+            expected: "']'".to_string(),
+            found: "end of the file".to_string(),
+        })
+    }
+    fn parse_key_value(&mut self,path:&Vec<String>,key:&String,root:&mut HashMap<String,TomlValue>) -> Result<(), ConfigError> {
+        let mut current_root = root;
+        for header in path {
+            let next_node = current_root
+                .entry(header.clone())
+                .or_insert_with(|| TomlValue::Table(HashMap::new()));
+
+            match next_node {
+                TomlValue::Table(inner) => {
+                    current_root = inner;
+                }
+                _ => {
+                    return Err(ConfigError::UnexpectedCharacter {
+                        line:0,
+                        col:0,
+                        expected: "a table".to_string(),
+                        found: "a conflicting value".to_string(),
+                    })
+                }
+            }
+        }
+        let eq_token = self.current();
+        match eq_token {
+            Some(t) if t.kind == TokenKind::Equal => {
+                self.advance();
+            }
+            Some(t) => {
+                return Err(ConfigError::ExpectedToken {
+                    line: t.line,
+                    col: t.col,
+                    expected: "=".to_string(),
+                    found: format!("{:?}", t.kind),
+                });
+            }
+            None => {
+                return Err(ConfigError::MissingValue {
+                    line: 0,
+                    col: 1,
+                    key: key.clone(),
+                });
+            }
+        }
+        let value = self.parse_value()?;
+        current_root.insert(key.clone(), value);
+        Ok(())
     }
 }
