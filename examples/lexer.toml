@@ -1,0 +1,11 @@
+# comment
+[root]
+array = ["string",true,false]
+braces = {}
+integer = -100
+float = 3.14
+boolean = true
+
+[root.table]
+
+
