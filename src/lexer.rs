@@ -74,17 +74,57 @@ impl Lexer {
                         col: self.col,
                     })
                 }
-                b'[' => {
-                    let (key, line, col) = self.read_table_header()?;
-                    tokens.push(SpannedToken {
-                        kind: TokenKind::TableHeader(key),
-                        line,
-                        col,
-                    });
-                }
                 b'=' => {
                     tokens.push(SpannedToken {
                         kind: TokenKind::Equal,
+                        line: self.line,
+                        col: self.col,
+                    });
+                    self.advance();
+                }
+                b',' => {
+                    tokens.push(SpannedToken {
+                        kind: TokenKind::Comma,
+                        line: self.line,
+                        col: self.col,
+                    });
+                    self.advance();
+                }
+                b'[' => {
+                    tokens.push(SpannedToken {
+                        kind: TokenKind::LBracket,
+                        line: self.line,
+                        col: self.col,
+                    });
+                    self.advance();
+                }
+                b']' => {
+                    tokens.push(SpannedToken {
+                        kind: TokenKind::RBracket,
+                        line: self.line,
+                        col: self.col,
+                    });
+                    self.advance();
+                }
+                b'{' => {
+                    tokens.push(SpannedToken {
+                        kind: TokenKind::LBrace,
+                        line: self.line,
+                        col: self.col,
+                    });
+                    self.advance();
+                }
+                b'}' => {
+                    tokens.push(SpannedToken {
+                        kind: TokenKind::RBrace,
+                        line: self.line,
+                        col: self.col,
+                    });
+                    self.advance();
+                }
+                b'.' => {
+                    tokens.push(SpannedToken {
+                        kind: TokenKind::Dot,
                         line: self.line,
                         col: self.col,
                     });

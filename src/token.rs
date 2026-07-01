@@ -1,12 +1,20 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     Equal,
+    Comma,
+    LBracket,
+    RBracket,
+    LBrace,
+    RBrace,
+    Dot,
+
     StringLit(String),
     Integer(i64),
     Float(f64),
     Boolean(bool),
+    DateTime(String),
+
     Identifier(String),
-    TableHeader(String),
     Comment(String),
     NewLine,
 }

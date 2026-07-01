@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TomlValue {
     String(String),
@@ -5,7 +7,7 @@ pub enum TomlValue {
     Float(f64),
     Boolean(bool),
     Array(Vec<TomlValue>),
-    Table(Vec<(String, TomlValue)>),
+    Table(HashMap<String, TomlValue>),
 }
 
 pub fn display(value: &TomlValue) -> String {
