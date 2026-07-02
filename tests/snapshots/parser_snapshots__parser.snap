@@ -1,0 +1,450 @@
+---
+source: tests/parser_snapshots.rs
+expression: tokenized
+---
+Ok(
+    [
+        SpannedToken {
+            kind: Comment(
+                " comment",
+            ),
+            line: 1,
+            col: 10,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 2,
+            col: 1,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 2,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "root",
+            ),
+            line: 2,
+            col: 2,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 2,
+            col: 6,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 3,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "array",
+            ),
+            line: 3,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 3,
+            col: 7,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 3,
+            col: 9,
+        },
+        SpannedToken {
+            kind: StringLit(
+                "string",
+            ),
+            line: 3,
+            col: 10,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 3,
+            col: 18,
+        },
+        SpannedToken {
+            kind: Boolean(
+                true,
+            ),
+            line: 3,
+            col: 19,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 3,
+            col: 23,
+        },
+        SpannedToken {
+            kind: Boolean(
+                false,
+            ),
+            line: 3,
+            col: 24,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 3,
+            col: 29,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 4,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Comment(
+                " braces = {}",
+            ),
+            line: 4,
+            col: 14,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 5,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "integer",
+            ),
+            line: 5,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 5,
+            col: 9,
+        },
+        SpannedToken {
+            kind: Integer(
+                -100,
+            ),
+            line: 5,
+            col: 11,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 6,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "float",
+            ),
+            line: 6,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 6,
+            col: 7,
+        },
+        SpannedToken {
+            kind: Float(
+                3.14,
+            ),
+            line: 6,
+            col: 9,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 7,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "boolean",
+            ),
+            line: 7,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 7,
+            col: 9,
+        },
+        SpannedToken {
+            kind: Boolean(
+                true,
+            ),
+            line: 7,
+            col: 11,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 8,
+            col: 1,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 9,
+            col: 1,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 9,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "root",
+            ),
+            line: 9,
+            col: 2,
+        },
+        SpannedToken {
+            kind: Dot,
+            line: 9,
+            col: 6,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "table",
+            ),
+            line: 9,
+            col: 7,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 9,
+            col: 12,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 10,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "array",
+            ),
+            line: 10,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 10,
+            col: 7,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 10,
+            col: 9,
+        },
+        SpannedToken {
+            kind: StringLit(
+                "string",
+            ),
+            line: 10,
+            col: 10,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 10,
+            col: 18,
+        },
+        SpannedToken {
+            kind: Integer(
+                100,
+            ),
+            line: 10,
+            col: 19,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 10,
+            col: 22,
+        },
+        SpannedToken {
+            kind: Float(
+                1.3,
+            ),
+            line: 10,
+            col: 23,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 10,
+            col: 26,
+        },
+        SpannedToken {
+            kind: Boolean(
+                true,
+            ),
+            line: 10,
+            col: 27,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 10,
+            col: 31,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 10,
+            col: 32,
+        },
+        SpannedToken {
+            kind: StringLit(
+                "nested",
+            ),
+            line: 10,
+            col: 33,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 10,
+            col: 41,
+        },
+        SpannedToken {
+            kind: Float(
+                4.3,
+            ),
+            line: 10,
+            col: 42,
+        },
+        SpannedToken {
+            kind: Comma,
+            line: 10,
+            col: 45,
+        },
+        SpannedToken {
+            kind: Boolean(
+                false,
+            ),
+            line: 10,
+            col: 46,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 10,
+            col: 51,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 10,
+            col: 52,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 11,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "integer",
+            ),
+            line: 11,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 11,
+            col: 9,
+        },
+        SpannedToken {
+            kind: Integer(
+                4,
+            ),
+            line: 11,
+            col: 11,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 12,
+            col: 1,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 13,
+            col: 1,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 13,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "root",
+            ),
+            line: 13,
+            col: 2,
+        },
+        SpannedToken {
+            kind: Dot,
+            line: 13,
+            col: 6,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "table",
+            ),
+            line: 13,
+            col: 7,
+        },
+        SpannedToken {
+            kind: Dot,
+            line: 13,
+            col: 12,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "cable",
+            ),
+            line: 13,
+            col: 13,
+        },
+        SpannedToken {
+            kind: Dot,
+            line: 13,
+            col: 18,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "stable",
+            ),
+            line: 13,
+            col: 19,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 13,
+            col: 25,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 14,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Identifier(
+                "boolean",
+            ),
+            line: 14,
+            col: 1,
+        },
+        SpannedToken {
+            kind: Equal,
+            line: 14,
+            col: 9,
+        },
+        SpannedToken {
+            kind: Boolean(
+                true,
+            ),
+            line: 14,
+            col: 11,
+        },
+        SpannedToken {
+            kind: NewLine,
+            line: 15,
+            col: 1,
+        },
+    ],
+)
