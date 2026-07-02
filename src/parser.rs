@@ -143,7 +143,7 @@ impl Parser {
                 TokenKind::LBracket => {
                     current_path = self.parse_table_header()?;
                 }
-                TokenKind::Identifier(key)|TokenKind::StringLit(key) => {
+                TokenKind::Identifier(key) | TokenKind::StringLit(key) => {
                     self.advance();
                     self.parse_key_value(&current_path, key, &mut pairs)?;
                 }
@@ -170,7 +170,7 @@ impl Parser {
                 match &token.kind {
                     TokenKind::RBracket => {
                         self.advance();
-                        return Ok(dotted)
+                        return Ok(dotted);
                     }
                     TokenKind::Dot => {
                         expect_dot = false;
@@ -185,7 +185,7 @@ impl Parser {
                         });
                     }
                 }
-            }else{
+            } else {
                 match &token.kind {
                     TokenKind::Identifier(t) => {
                         dotted.push(t.clone());
@@ -217,7 +217,12 @@ impl Parser {
             found: "end of the file".to_string(),
         })
     }
-    fn parse_key_value(&mut self,path:&Vec<String>,key:&String,root:&mut HashMap<String,TomlValue>) -> Result<(), ConfigError> {
+    fn parse_key_value(
+        &mut self,
+        path: &Vec<String>,
+        key: &String,
+        root: &mut HashMap<String, TomlValue>,
+    ) -> Result<(), ConfigError> {
         let mut current_root = root;
         for header in path {
             let next_node = current_root
@@ -230,11 +235,11 @@ impl Parser {
                 }
                 _ => {
                     return Err(ConfigError::UnexpectedCharacter {
-                        line:0,
-                        col:0,
+                        line: 0,
+                        col: 0,
                         expected: "a table".to_string(),
                         found: "a conflicting value".to_string(),
-                    })
+                    });
                 }
             }
         }

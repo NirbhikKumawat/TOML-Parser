@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq,Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum TomlValue {
     String(String),
     Integer(i64),
