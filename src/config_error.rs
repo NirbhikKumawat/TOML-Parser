@@ -46,6 +46,8 @@ pub enum ConfigError {
         min: i64,
         max: i64,
     },
+    #[error("invalid escape sequence at line {line}, column {col}'")]
+    InvalidEscapeSequence { line: usize, col: usize },
     #[error("unknown key '{key}' at line {line}")]
     UnknownKey { key: String, line: usize },
     #[error("io error: {0}")]
@@ -60,6 +62,7 @@ pub fn format_error(err: &ConfigError, source: &str) -> String {
         ConfigError::MissingValue { line, .. } => *line,
         ConfigError::SchemaViolation { line, .. } => *line,
         ConfigError::UnknownKey { line, .. } => *line,
+        ConfigError::InvalidEscapeSequence { line, .. } => *line,
         _ => 0,
     };
 

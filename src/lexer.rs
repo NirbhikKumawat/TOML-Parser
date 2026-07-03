@@ -42,6 +42,13 @@ impl Lexer {
             None
         }
     }
+    fn peek_n(&self, n: usize) -> Option<u8> {
+        if self.pos + n < self.input.len() {
+            Some(self.input[self.pos + n])
+        } else {
+            None
+        }
+    }
     fn skip_whitespace_inline(&mut self) {
         while let Some(c) = self.current() {
             if c == b' ' || c == b'\t' {
@@ -106,6 +113,16 @@ impl Lexer {
                     });
                     self.advance();
                 }
+                b'(' => tokens.push(SpannedToken {
+                    kind: TokenKind::LParen,
+                    line: self.line,
+                    col: self.col,
+                }),
+                b')' => tokens.push(SpannedToken {
+                    kind: TokenKind::RParen,
+                    line: self.line,
+                    col: self.col,
+                }),
                 b'{' => {
                     tokens.push(SpannedToken {
                         kind: TokenKind::LBrace,
@@ -131,12 +148,38 @@ impl Lexer {
                     self.advance();
                 }
                 b'"' => {
-                    let (s, line, col) = self.read_string()?;
-                    tokens.push(SpannedToken {
-                        kind: TokenKind::StringLit(s),
-                        line,
-                        col,
-                    });
+                    if self.peek() == Some(b'"') && self.peek_n(2) == Some(b'"') {
+                        let (s, line, col) = self.read_multiline_string()?;
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::StringLit(s),
+                            line,
+                            col,
+                        });
+                    } else {
+                        let (s, line, col) = self.read_string()?;
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::StringLit(s),
+                            line,
+                            col,
+                        });
+                    }
+                }
+                b'\'' => {
+                    if self.peek() == Some(b'\'') && self.peek_n(2) == Some(b'\'') {
+                        let (s, line, col) = self.read_multiline_string()?;
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::StringLit(s),
+                            line,
+                            col,
+                        });
+                    } else {
+                        let (s, line, col) = self.read_string()?;
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::StringLit(s),
+                            line,
+                            col,
+                        });
+                    }
                 }
                 b'0'..=b'9' | b'-' if !is_alpha(self.peek().unwrap_or(b'\0')) => {
                     let (tok, line, col) = self.read_number()?;
@@ -229,6 +272,86 @@ impl Lexer {
             line: start_line,
             col: start_col,
         })
+    }
+    fn read_multiline_string(&mut self) -> Result<(String, usize, usize), ConfigError> {
+        let start_line = self.line;
+        let start_col = self.col;
+        self.advance();
+        self.advance();
+        self.advance();
+        if self.current() == Some(b'\n') {
+            self.advance();
+        } else if self.current() == Some(b'\r') && self.peek() == Some(b'\n') {
+            self.advance();
+            self.advance();
+        };
+
+        let mut result = String::new();
+        loop {
+            match self.current() {
+                None => {
+                    return Err(ConfigError::UnterminatedString {
+                        line: start_line,
+                        col: start_col,
+                    });
+                }
+                Some(b'"') => {
+                    if self.peek() == Some(b'"') && self.peek_n(2) == Some(b'"') {
+                        self.advance();
+                        self.advance();
+                        self.advance();
+                        return Ok((result, start_line, start_col));
+                    } else {
+                        result.push('"');
+                        self.advance();
+                    }
+                }
+                Some(b'\\') => {
+                    self.advance();
+                    match self.current() {
+                        Some(b'\n') | Some(b'\r') => {
+                            while let Some(c) = self.current() {
+                                if c == b'\n' || c == b'\t' || c == b' ' || c == b'\r' {
+                                    self.advance();
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                        Some(b'\\') => {
+                            result.push('\\');
+                            self.advance();
+                        }
+                        Some(b'"') => {
+                            result.push('"');
+                            self.advance();
+                        }
+                        Some(b'n') => {
+                            result.push('\n');
+                            self.advance();
+                        }
+                        Some(b'r') => {
+                            result.push('\r');
+                            self.advance();
+                        }
+                        Some(b't') => {
+                            result.push('\t');
+                            self.advance();
+                        }
+                        _ => {
+                            return Err(ConfigError::InvalidEscapeSequence {
+                                line: self.line,
+                                col: self.col,
+                            });
+                        }
+                    }
+                }
+                Some(c) => {
+                    result.push(c as char);
+                    self.advance();
+                }
+            }
+        }
     }
     fn read_string(&mut self) -> Result<(String, usize, usize), ConfigError> {
         let start_line = self.line;
@@ -362,6 +485,79 @@ impl Lexer {
             }
         }
         (result, start_line, start_col)
+    }
+    fn read_literal(&mut self) -> Result<(String, usize, usize), ConfigError> {
+        let start_line = self.line;
+        let start_col = self.col;
+        self.advance();
+        let mut result = String::new();
+
+        loop {
+            match self.current() {
+                None => {
+                    return Err(ConfigError::UnterminatedString {
+                        line: start_line,
+                        col: start_col,
+                    });
+                }
+                Some(b'\n') => {
+                    return Err(ConfigError::UnterminatedString {
+                        line: start_line,
+                        col: start_col,
+                    });
+                }
+                Some(b'\'') => {
+                    self.advance();
+                    return Ok((result, start_line, start_col));
+                }
+                Some(c) => {
+                    result.push(c as char);
+                    self.advance();
+                }
+            }
+        }
+    }
+    fn read_multiline_literal(&mut self) -> Result<(String, usize, usize), ConfigError> {
+        let start_line = self.line;
+        let start_col = self.col;
+        self.advance();
+        self.advance();
+        self.advance();
+
+        if self.current() == Some(b'\n') {
+            self.advance();
+        } else if self.current() == Some(b'\r') && self.peek() == Some(b'\n') {
+            self.advance();
+            self.advance();
+        };
+
+        let mut result = String::new();
+
+        loop {
+            match self.current() {
+                None => {
+                    return Err(ConfigError::UnterminatedString {
+                        line: start_line,
+                        col: start_col,
+                    });
+                }
+                Some(b'\'') => {
+                    if self.peek() == Some(b'\'') && self.peek_n(2) == Some(b'\'') {
+                        self.advance();
+                        self.advance();
+                        self.advance();
+                        return Ok((result, start_line, start_col));
+                    } else {
+                        result.push('\'');
+                        self.advance();
+                    }
+                }
+                Some(c) => {
+                    result.push(c as char);
+                    self.advance();
+                }
+            }
+        }
     }
 }
 fn is_alpha(c: u8) -> bool {
