@@ -2,8 +2,8 @@ use std::fs;
 use toml::config_error::{ConfigError, format_error};
 use toml::lexer::Lexer;
 use toml::parser::Parser;
-use toml::schema::{flatten_table, parse_schema, validate};
-use toml::toml_value::display;
+use toml::schema::{parse_schema, validate};
+use toml::toml_value::{TomlValue, display};
 
 fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
     let config_source = match fs::read_to_string(config_path) {
@@ -26,6 +26,11 @@ fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
         Err(e) => return Err(vec![e]),
     };
 
+    let config_map = match &config_value {
+        TomlValue::Table(table) => table,
+        _ => return Err(vec![]),
+    };
+
     let mut schema_lexer = Lexer::new(&schema_source);
     let schema_tokens = match schema_lexer.tokenize() {
         Ok(tokens) => tokens,
@@ -42,13 +47,10 @@ fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
         Err(e) => return Err(vec![e]),
     };
 
-    validate(&config_value, &schema, &config_source)?;
+    validate(&schema, &config_map).map_err(|e| vec![e])?;
     println!("Config is valid!");
-    println!();
-    println!("Parsed config:");
-    for (key, value) in flatten_table(&config_value, "") {
-        println!("  {} = {}", key, display(&value));
-    }
+
+    println!("Parsed Configuration:\n{:#?}", config_value);
 
     Ok(())
 }
