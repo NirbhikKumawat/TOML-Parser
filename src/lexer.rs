@@ -113,16 +113,6 @@ impl Lexer {
                     });
                     self.advance();
                 }
-                b'(' => tokens.push(SpannedToken {
-                    kind: TokenKind::LParen,
-                    line: self.line,
-                    col: self.col,
-                }),
-                b')' => tokens.push(SpannedToken {
-                    kind: TokenKind::RParen,
-                    line: self.line,
-                    col: self.col,
-                }),
                 b'{' => {
                     tokens.push(SpannedToken {
                         kind: TokenKind::LBrace,

@@ -64,13 +64,7 @@ impl Parser {
                     let mut elements: Vec<TomlValue> = Vec::new();
                     let mut expect_comma = false;
                     while let Some(token) = self.current().cloned() {
-                        match token.kind {
-                            TokenKind::NewLine | TokenKind::Comment(_) => {
-                                self.advance();
-                                continue;
-                            }
-                            _ => {}
-                        }
+                        self.skip_newlines();
                         if expect_comma {
                             match token.kind {
                                 TokenKind::Comma => {

@@ -7,6 +7,7 @@ pub enum TomlValue {
     Integer(i64),
     Float(f64),
     Boolean(bool),
+    DateTime(String),
     Array(Vec<TomlValue>),
     Table(HashMap<String, TomlValue>),
 }
@@ -17,6 +18,7 @@ pub fn display(value: &TomlValue) -> String {
         TomlValue::Integer(i) => format!("{}", i),
         TomlValue::Float(f) => format!("{}", f),
         TomlValue::Boolean(b) => format!("{}", b),
+        TomlValue::DateTime(d) => format!("{}", d),
         TomlValue::Array(arr) => {
             let mut result = String::from("[");
             let mut first = true;
@@ -53,5 +55,6 @@ pub fn toml_type_name(value: &TomlValue) -> &'static str {
         TomlValue::Boolean(_) => "boolean",
         TomlValue::Table(_) => "table",
         TomlValue::Array(_) => "array",
+        TomlValue::DateTime(_) => "datetime",
     }
 }

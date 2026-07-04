@@ -6,8 +6,6 @@ pub enum TokenKind {
     RBracket,
     LBrace,
     RBrace,
-    LParen,
-    RParen,
     Dot,
 
     StringLit(String),
