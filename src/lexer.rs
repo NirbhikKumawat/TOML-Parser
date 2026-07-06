@@ -263,18 +263,21 @@ impl Lexer {
             col: start_col,
         })
     }
-    fn read_multiline_string(&mut self) -> Result<(String, usize, usize), ConfigError> {
-        let start_line = self.line;
-        let start_col = self.col;
-        self.advance();
-        self.advance();
-        self.advance();
+    fn skip_newlines_in_multiline_string(&mut self) {
         if self.current() == Some(b'\n') {
             self.advance();
         } else if self.current() == Some(b'\r') && self.peek() == Some(b'\n') {
             self.advance();
             self.advance();
         };
+    }
+    fn read_multiline_string(&mut self) -> Result<(String, usize, usize), ConfigError> {
+        let start_line = self.line;
+        let start_col = self.col;
+        self.advance();
+        self.advance();
+        self.advance();
+        self.skip_newlines_in_multiline_string();
 
         let mut result = String::new();
         loop {
@@ -414,11 +417,45 @@ impl Lexer {
             s.push('-');
             self.advance();
         }
+        match self.current() {
+            Some(c @ b'0'..=b'9') => {
+                s.push(c as char);
+                self.advance();
+            }
+            Some(b'_') => {
+                return Err(ConfigError::InvalidNumber {
+                    line: start_line,
+                    col: start_col,
+                    detail: "underscore should have numbers on both ends".to_string(),
+                });
+            }
+            Some(b'.') => {
+                return Err(ConfigError::InvalidNumber {
+                    line: start_line,
+                    col: start_col,
+                    detail: "number cannot start with dot".to_string(),
+                });
+            }
+            _ => {}
+        }
 
         loop {
             match self.current() {
                 Some(c @ b'0'..=b'9') => {
                     s.push(c as char);
+                    self.advance();
+                }
+                Some(b'_') => {
+                    match self.peek() {
+                        Some(b'0'..=b'9') => {}
+                        _ => {
+                            return Err(ConfigError::InvalidNumber {
+                                line: start_line,
+                                col: start_col,
+                                detail: "underscore should have numbers on both ends".to_string(),
+                            });
+                        }
+                    }
                     self.advance();
                 }
                 Some(b'.') => {
@@ -428,6 +465,16 @@ impl Lexer {
                             col: start_col,
                             detail: "multiple decimal points".to_string(),
                         });
+                    }
+                    match self.peek() {
+                        Some(b'0'..=b'9') => {}
+                        _ => {
+                            return Err(ConfigError::InvalidNumber {
+                                line: start_line,
+                                col: start_col,
+                                detail: "fractional part must start with a digit".to_string(),
+                            });
+                        }
                     }
                     has_dot = true;
                     s.push('.');
@@ -514,12 +561,7 @@ impl Lexer {
         self.advance();
         self.advance();
 
-        if self.current() == Some(b'\n') {
-            self.advance();
-        } else if self.current() == Some(b'\r') && self.peek() == Some(b'\n') {
-            self.advance();
-            self.advance();
-        };
+        self.skip_newlines_in_multiline_string();
 
         let mut result = String::new();
 

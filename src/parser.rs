@@ -104,12 +104,12 @@ impl Parser {
                             expect_comma = true;
                         }
                     }
-                    return Err(ConfigError::UnexpectedCharacter {
+                    Err(ConfigError::UnexpectedCharacter {
                         line: t.line,
                         col: t.col,
                         expected: "]".to_string(),
                         found: "end of input".to_string(),
-                    });
+                    })
                 }
                 _ => Err(ConfigError::ExpectedToken {
                     line: t.line,

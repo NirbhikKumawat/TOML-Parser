@@ -3,7 +3,7 @@ use toml::config_error::{ConfigError, format_error};
 use toml::lexer::Lexer;
 use toml::parse_schema::parse_schema;
 use toml::parser::Parser;
-use toml::toml_value::{TomlValue};
+use toml::toml_value::TomlValue;
 use toml::validate_schema::validate;
 
 fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {

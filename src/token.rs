@@ -7,6 +7,7 @@ pub enum TokenKind {
     LBrace,
     RBrace,
     Dot,
+    Underscore,
 
     StringLit(String),
     Integer(i64),
