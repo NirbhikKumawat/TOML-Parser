@@ -412,6 +412,7 @@ impl Lexer {
         let start_col = self.col;
         let mut s = String::new();
         let mut has_dot = false;
+        let mut has_exp = false;
 
         match self.current() {
             Some(b'0') => match self.peek() {
@@ -618,6 +619,13 @@ impl Lexer {
                     self.advance();
                 }
                 Some(b'.') => {
+                    if has_exp {
+                        return Err(ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: "fractional part cannot follow an exponent".to_string(),
+                        });
+                    }
                     if has_dot {
                         return Err(ConfigError::InvalidNumber {
                             line: start_line,
@@ -639,6 +647,36 @@ impl Lexer {
                     s.push('.');
                     self.advance();
                 }
+                Some(c @ b'e') | Some(c @ b'E') => {
+                    if has_exp {
+                        return Err(ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: "multiple exponents".to_string(),
+                        });
+                    }
+                    has_exp = true;
+                    s.push(c as char);
+                    self.advance();
+
+                    if let Some(sign @ b'+') | Some(sign @ b'-') = self.current() {
+                        s.push(sign as char);
+                        self.advance();
+                    }
+                    match self.current() {
+                        Some(c @ b'0'..=b'9') => {
+                            s.push(c as char);
+                            self.advance();
+                        }
+                        _ => {
+                            return Err(ConfigError::InvalidNumber {
+                                line: start_line,
+                                col: start_col,
+                                detail: "exponent part must start with a digit".to_string(),
+                            });
+                        }
+                    }
+                }
                 Some(c) => match c {
                     b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
                         break;
@@ -654,7 +692,7 @@ impl Lexer {
                 None => break,
             }
         }
-        if has_dot {
+        if has_dot || has_exp {
             let value: f64 = match s.parse() {
                 Ok(v) => v,
                 Err(_) => {
