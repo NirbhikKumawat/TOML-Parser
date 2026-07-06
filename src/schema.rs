@@ -1,6 +1,7 @@
 use crate::config_error::ConfigError;
 use crate::field::{FieldSchema, FieldType, Schema};
 use crate::toml_value::{TomlValue, toml_type_name};
+use regex::Regex;
 use std::collections::HashMap;
 
 pub fn parse_schema(value: &TomlValue) -> Result<Schema, ConfigError> {
@@ -14,6 +15,423 @@ pub fn parse_schema(value: &TomlValue) -> Result<Schema, ConfigError> {
         }),
     }
 }
+/*fn parse_array_schema(inner: &HashMap<String, TomlValue>) -> Result<FieldSchema, ConfigError> {
+
+}*/
+fn parse_string_schema(inner: &HashMap<String, TomlValue>) -> Result<FieldSchema, ConfigError> {
+    let mut required: bool = false;
+    let mut default: Option<TomlValue> = None;
+    let mut allowed_values: Option<Vec<TomlValue>> = None;
+    let mut description: Option<String> = None;
+    let mut min: Option<usize> = None;
+    let mut max: Option<usize> = None;
+    let mut pattern: Option<String> = None;
+
+    for (key, value) in inner {
+        match key.as_str() {
+            "type" => continue,
+            "required" => {
+                required = match value {
+                    TomlValue::Boolean(b) => *b,
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "default" => {
+                default = match value {
+                    TomlValue::String(s) => Some(TomlValue::String(s.clone())),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "maxlen" => {
+                max = match value {
+                    TomlValue::Integer(n) => Some(*n as usize),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "minlen" => {
+                min = match value {
+                    TomlValue::Integer(n) => Some(*n as usize),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "description" => {
+                description = match value {
+                    TomlValue::String(s) => Some(s.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                };
+            }
+            "allowedvalues" => {
+                allowed_values = match value {
+                    TomlValue::Array(a) => Some(a.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "pattern" => {
+                pattern = match value {
+                    TomlValue::String(s) => Some(s.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            _ => {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+    }
+    Ok(FieldSchema {
+        field_type: FieldType::String { min, max, pattern },
+        required,
+        default,
+        allowed_values,
+        description,
+    })
+}
+fn parse_boolean_schema(inner: &HashMap<String, TomlValue>) -> Result<FieldSchema, ConfigError> {
+    let mut required: bool = false;
+    let mut default: Option<TomlValue> = None;
+    let mut description: Option<String> = None;
+    let mut allowed_values: Option<Vec<TomlValue>> = None;
+
+    for (key, value) in inner {
+        match key.as_str() {
+            "type" => continue,
+            "required" => {
+                required = match value {
+                    TomlValue::Boolean(b) => *b,
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "default" => {
+                default = match value {
+                    TomlValue::Boolean(b) => Some(TomlValue::Boolean(*b)),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "description" => {
+                description = match value {
+                    TomlValue::String(s) => Some(s.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                };
+            }
+            "allowedvalues" => {
+                allowed_values = match value {
+                    TomlValue::Array(a) => Some(a.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            _ => {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+    }
+    Ok(FieldSchema {
+        field_type: FieldType::Boolean,
+        required,
+        default,
+        allowed_values,
+        description,
+    })
+}
+fn parse_float_schema(inner: &HashMap<String, TomlValue>) -> Result<FieldSchema, ConfigError> {
+    let mut required: bool = false;
+    let mut default: Option<TomlValue> = None;
+    let mut allowed_values: Option<Vec<TomlValue>> = None;
+    let mut description: Option<String> = None;
+    let mut min: Option<f64> = None;
+    let mut max: Option<f64> = None;
+
+    for (key, value) in inner {
+        match key.as_str() {
+            "type" => continue,
+            "required" => {
+                required = match value {
+                    TomlValue::Boolean(b) => *b,
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "default" => {
+                default = match value {
+                    TomlValue::Float(n) => Some(TomlValue::Float(*n)),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "min" => {
+                min = match value {
+                    TomlValue::Float(n) => Some(*n),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "max" => {
+                max = match value {
+                    TomlValue::Float(n) => Some(*n),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "description" => {
+                description = match value {
+                    TomlValue::String(s) => Some(s.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                };
+            }
+            "allowedvalues" => {
+                allowed_values = match value {
+                    TomlValue::Array(a) => Some(a.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            _ => {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+    }
+    Ok(FieldSchema {
+        field_type: FieldType::Float { min, max },
+        required,
+        default,
+        allowed_values,
+        description,
+    })
+}
+fn parse_integer_schema(inner: &HashMap<String, TomlValue>) -> Result<FieldSchema, ConfigError> {
+    let mut required: bool = false;
+    let mut default: Option<TomlValue> = None;
+    let mut allowed_values: Option<Vec<TomlValue>> = None;
+    let mut description: Option<String> = None;
+    let mut min: Option<i64> = None;
+    let mut max: Option<i64> = None;
+
+    for (key, value) in inner {
+        match key.as_str() {
+            "type" => continue,
+            "required" => {
+                required = match value {
+                    TomlValue::Boolean(b) => *b,
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "default" => {
+                default = match value {
+                    TomlValue::Integer(n) => Some(TomlValue::Integer(*n)),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "min" => {
+                min = match value {
+                    TomlValue::Integer(n) => Some(*n),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "max" => {
+                max = match value {
+                    TomlValue::Integer(n) => Some(*n),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            "description" => {
+                description = match value {
+                    TomlValue::String(s) => Some(s.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                };
+            }
+            "allowedvalues" => {
+                allowed_values = match value {
+                    TomlValue::Array(a) => Some(a.clone()),
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: 0,
+                            col: 0,
+                            expected: "boolean".to_string(),
+                            found: "non boolean".to_string(),
+                        });
+                    }
+                }
+            }
+            _ => {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+    }
+    Ok(FieldSchema {
+        field_type: FieldType::Integer { min, max },
+        required,
+        default,
+        allowed_values,
+        description,
+    })
+}
 pub fn parse_schema_internal(table: &HashMap<String, TomlValue>) -> Result<Schema, ConfigError> {
     let mut schema = HashMap::new();
 
@@ -23,110 +441,7 @@ pub fn parse_schema_internal(table: &HashMap<String, TomlValue>) -> Result<Schem
             _ => continue,
         };
 
-        if inner.contains_key("type") {
-            let mut field_type = FieldType::String;
-            let mut required = false;
-            let mut default_value: Option<TomlValue> = None;
-            let mut min_val: Option<i64> = None;
-            let mut max_val: Option<i64> = None;
-            let mut min_length: Option<usize> = None;
-            let mut max_length: Option<usize> = None;
-            let mut allowed_values: Option<Vec<TomlValue>> = None;
-            let mut pattern: Option<String> = None;
-            let mut description: Option<String> = None;
-
-            for (field_name, field_value) in inner {
-                match field_name.as_str() {
-                    "type" => {
-                        let type_str = match field_value {
-                            TomlValue::String(s) => s.clone(),
-                            _ => String::new(),
-                        };
-                        match FieldType::from_str(&type_str) {
-                            Some(t) => {
-                                field_type = t;
-                            }
-                            None => {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: "valid type (e.g., string,integer,array[...])"
-                                        .to_string(),
-                                    found: type_str,
-                                });
-                            }
-                        }
-                    }
-                    "required" => {
-                        required = match field_value {
-                            TomlValue::Boolean(b) => *b,
-                            _ => false,
-                        }
-                    }
-                    "default" => {
-                        default_value = Some(field_value.clone());
-                    }
-                    "min" => {
-                        min_val = match field_value {
-                            TomlValue::Integer(n) => Some(*n),
-                            _ => None,
-                        }
-                    }
-                    "max" => {
-                        max_val = match field_value {
-                            TomlValue::Integer(n) => Some(*n),
-                            _ => None,
-                        }
-                    }
-                    "min_length" => {
-                        min_length = match field_value {
-                            TomlValue::Integer(n) if *n >= 0 => Some(*n as usize),
-                            _ => None,
-                        }
-                    }
-                    "max_length" => {
-                        max_length = match field_value {
-                            TomlValue::Integer(n) if *n >= 0 => Some(*n as usize),
-                            _ => None,
-                        }
-                    }
-                    "allowed_values" => {
-                        allowed_values = match field_value {
-                            TomlValue::Array(arr) => Some(arr.clone()),
-                            _ => None,
-                        }
-                    }
-                    "pattern" => {
-                        pattern = match field_value {
-                            TomlValue::String(s) => Some(s.clone()),
-                            _ => None,
-                        }
-                    }
-                    "description" => {
-                        description = match field_value {
-                            TomlValue::String(s) => Some(s.clone()),
-                            _ => None,
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            schema.insert(
-                key.clone(),
-                FieldSchema {
-                    field_type,
-                    required,
-                    default: default_value,
-                    min: min_val,
-                    max: max_val,
-                    min_len: min_length,
-                    max_len: max_length,
-                    allowed_values,
-                    pattern,
-                    description,
-                },
-            );
-        } else {
+        if !inner.contains_key("type") {
             let nested_schema = parse_schema_internal(inner)?;
             schema.insert(
                 key.clone(),
@@ -134,21 +449,221 @@ pub fn parse_schema_internal(table: &HashMap<String, TomlValue>) -> Result<Schem
                     field_type: FieldType::Table(nested_schema),
                     required: true,
                     default: None,
-                    min: None,
-                    max: None,
-                    min_len: None,
-                    max_len: None,
                     allowed_values: None,
-                    pattern: None,
                     description: None,
                 },
             );
+            continue;
         }
-    }
 
+        let type_str = match inner.get("type") {
+            Some(TomlValue::String(s)) => s.clone(),
+            _ => {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: "a string value for  'type'".to_string(),
+                    found: "missing or invalid type".to_string(),
+                });
+            }
+        };
+        match FieldType::from_str(&type_str) {
+            Some(FieldType::Integer { min: _, max: _ }) => {
+                let value = parse_integer_schema(inner)?;
+                schema.insert(key.clone(), value);
+            }
+            Some(FieldType::Float { min: _, max: _ }) => {
+                let value = parse_float_schema(inner)?;
+                schema.insert(key.clone(), value);
+            }
+            Some(FieldType::String {
+                min: _,
+                max: _,
+                pattern: _,
+            }) => {
+                let value = parse_string_schema(inner)?;
+                schema.insert(key.clone(), value);
+            }
+            Some(FieldType::Boolean) => {
+                let value = parse_boolean_schema(inner)?;
+                schema.insert(key.clone(), value);
+            }
+            Some(FieldType::Array(arr)) => {}
+            Some(FieldType::Table(table)) => {}
+            None => {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: "valid type (e.g., string,integer,array[...])".to_string(),
+                    found: type_str,
+                });
+            }
+        };
+    }
     Ok(schema)
 }
 
+fn validate_integer(
+    min: &Option<i64>,
+    max: &Option<i64>,
+    allowed_values: &Option<Vec<TomlValue>>,
+    key: &String,
+    n: &i64,
+) -> Result<(), ConfigError> {
+    match min {
+        Some(i) => {
+            if n < i {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: format!(">= {}", i),
+                    found: i.to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    match max {
+        Some(i) => {
+            if n > i {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: format!("<= {}", i),
+                    found: i.to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    match allowed_values {
+        Some(v) => {
+            if !v.contains(&TomlValue::Integer(*n)) {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+fn validate_float(
+    min: &Option<f64>,
+    max: &Option<f64>,
+    allowed_values: &Option<Vec<TomlValue>>,
+    key: &String,
+    n: &f64,
+) -> Result<(), ConfigError> {
+    match min {
+        Some(i) => {
+            if n < &i {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: format!(">= {}", i),
+                    found: i.to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    match max {
+        Some(i) => {
+            if n > &i {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: format!("<= {}", i),
+                    found: i.to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    match allowed_values {
+        Some(v) => {
+            if !v.contains(&TomlValue::Float(*n)) {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+
+    Ok(())
+}
+fn validate_string(
+    min: &Option<usize>,
+    max: &Option<usize>,
+    pattern: &Option<String>,
+    allowed_values: &Option<Vec<TomlValue>>,
+    key: &String,
+    s: &String,
+) -> Result<(), ConfigError> {
+    match min {
+        Some(i) => {
+            if s.len() < *i {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: format!(">= {}", i),
+                    found: i.to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    match max {
+        Some(i) => {
+            if s.len() > *i {
+                return Err(ConfigError::SchemaViolation {
+                    line: 0,
+                    key: key.clone(),
+                    expected: format!("<= {}", i),
+                    found: i.to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    match pattern {
+        Some(p) => {
+            let re = Regex::new(&p).unwrap();
+            if !re.is_match(&s) {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+
+    match allowed_values {
+        Some(v) => {
+            if !v.contains(&TomlValue::String(s.clone())) {
+                return Err(ConfigError::ExpectedToken {
+                    line: 0,
+                    col: 0,
+                    expected: "boolean".to_string(),
+                    found: "non boolean".to_string(),
+                });
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
 pub fn validate(schema: &Schema, config: &HashMap<String, TomlValue>) -> Result<(), ConfigError> {
     for (key, field_schema) in schema {
         match config.get(key) {
@@ -163,71 +678,14 @@ pub fn validate(schema: &Schema, config: &HashMap<String, TomlValue>) -> Result<
             }
             Some(value) => {
                 match (&field_schema.field_type, value) {
-                    (FieldType::String, TomlValue::String(s)) => {
-                        if let Some(min) = field_schema.min_len {
-                            if s.len() < min {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: format!(">= {}", min),
-                                    found: s.len().to_string(),
-                                });
-                            }
-                        }
-                        if let Some(max) = field_schema.max_len {
-                            if s.len() > max {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: format!("<= {}", max),
-                                    found: s.len().to_string(),
-                                });
-                            }
-                        }
+                    (FieldType::String { min, max, pattern }, TomlValue::String(s)) => {
+                        validate_string(min, max, pattern, &field_schema.allowed_values, key, s)?;
                     }
-                    (FieldType::Integer, TomlValue::Integer(i)) => {
-                        if let Some(min) = field_schema.min {
-                            if *i < min {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: format!(">= {}", min),
-                                    found: i.to_string(),
-                                });
-                            }
-                        }
-                        if let Some(max) = field_schema.max {
-                            if *i > max {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: format!("<= {}", max),
-                                    found: i.to_string(),
-                                });
-                            }
-                        }
+                    (FieldType::Integer { min, max }, TomlValue::Integer(n)) => {
+                        validate_integer(min, max, &field_schema.allowed_values, key, n)?;
                     }
-                    (FieldType::Float, TomlValue::Float(i)) => {
-                        if let Some(min) = field_schema.min {
-                            if *i < min as f64 {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: format!(">= {}", min),
-                                    found: i.to_string(),
-                                });
-                            }
-                        }
-                        if let Some(max) = field_schema.max {
-                            if *i > max as f64 {
-                                return Err(ConfigError::SchemaViolation {
-                                    line: 0,
-                                    key: key.clone(),
-                                    expected: format!("<= {}", max),
-                                    found: i.to_string(),
-                                });
-                            }
-                        }
+                    (FieldType::Float { min, max }, TomlValue::Float(n)) => {
+                        validate_float(min, max, &field_schema.allowed_values, key, n)?
                     }
                     (FieldType::Boolean, TomlValue::Boolean(b)) => {
                         //unreachable!()
