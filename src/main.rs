@@ -1,9 +1,10 @@
 use std::fs;
 use toml::config_error::{ConfigError, format_error};
 use toml::lexer::Lexer;
+use toml::parse_schema::parse_schema;
 use toml::parser::Parser;
-use toml::schema::{parse_schema, validate};
-use toml::toml_value::{TomlValue, display};
+use toml::toml_value::{TomlValue};
+use toml::validate_schema::validate;
 
 fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
     let config_source = match fs::read_to_string(config_path) {
