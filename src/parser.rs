@@ -25,6 +25,13 @@ impl Parser {
             self.pos += 1;
         }
     }
+    fn peek(&self) -> Option<&TokenKind> {
+        if self.pos + 1 < self.tokens.len() {
+            Some(&self.tokens[self.pos + 1].kind)
+        } else {
+            None
+        }
+    }
     fn skip_newlines(&mut self) {
         while let Some(token) = self.current() {
             match &token.kind {
@@ -134,13 +141,15 @@ impl Parser {
                 TokenKind::Comment(_) | TokenKind::NewLine => {
                     self.advance();
                 }
-                TokenKind::LBracket => {
-                    current_path = self.parse_table_header()?;
-                }
-                TokenKind::DoubleLBracket => {
-                    current_path = self.parse_array_table_header()?;
-                    self.push_new_array_table(&current_path, &mut pairs)?;
-                }
+                TokenKind::LBracket => match self.peek() {
+                    Some(TokenKind::LBracket) => {
+                        current_path = self.parse_array_table_header()?;
+                        self.push_new_array_table(&current_path, &mut pairs)?;
+                    }
+                    _ => {
+                        current_path = self.parse_table_header()?;
+                    }
+                },
                 TokenKind::Identifier(key) | TokenKind::StringLit(key) => {
                     self.advance();
                     self.parse_key_value(&current_path, key, &mut pairs)?;
@@ -166,9 +175,30 @@ impl Parser {
         while let Some(token) = self.current().cloned() {
             if expect_dot {
                 match &token.kind {
-                    TokenKind::DoubleRBracket => {
+                    TokenKind::RBracket => {
                         self.advance();
-                        return Ok(dotted);
+                        match self.current() {
+                            Some(t) if t.kind == TokenKind::RBracket => {
+                                self.advance();
+                                return Ok(dotted);
+                            }
+                            Some(t) => {
+                                return Err(ConfigError::ExpectedToken {
+                                    line: t.line,
+                                    col: t.col,
+                                    expected: "']' to close array table".to_string(),
+                                    found: format!("{:?}", t.kind),
+                                });
+                            }
+                            _ => {
+                                return Err(ConfigError::UnexpectedCharacter {
+                                    line: 0,
+                                    col: 0,
+                                    expected: "']' to close array table".to_string(),
+                                    found: "end of input".to_string(),
+                                });
+                            }
+                        }
                     }
                     TokenKind::Dot => {
                         expect_dot = false;

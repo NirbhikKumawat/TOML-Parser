@@ -647,9 +647,14 @@ Ok(
             col: 8,
         },
         SpannedToken {
-            kind: DoubleLBracket,
+            kind: LBracket,
             line: 35,
             col: 10,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 35,
+            col: 11,
         },
         SpannedToken {
             kind: Float(
@@ -729,9 +734,14 @@ Ok(
             col: 37,
         },
         SpannedToken {
-            kind: DoubleRBracket,
+            kind: RBracket,
             line: 35,
             col: 41,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 35,
+            col: 42,
         },
         SpannedToken {
             kind: NewLine,
@@ -1332,9 +1342,14 @@ Ok(
             col: 1,
         },
         SpannedToken {
-            kind: DoubleLBracket,
+            kind: LBracket,
             line: 59,
             col: 1,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 59,
+            col: 2,
         },
         SpannedToken {
             kind: Identifier(
@@ -1344,9 +1359,14 @@ Ok(
             col: 3,
         },
         SpannedToken {
-            kind: DoubleRBracket,
+            kind: RBracket,
             line: 59,
             col: 16,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 59,
+            col: 17,
         },
         SpannedToken {
             kind: NewLine,
@@ -1378,9 +1398,14 @@ Ok(
             col: 1,
         },
         SpannedToken {
-            kind: DoubleLBracket,
+            kind: LBracket,
             line: 61,
             col: 1,
+        },
+        SpannedToken {
+            kind: LBracket,
+            line: 61,
+            col: 2,
         },
         SpannedToken {
             kind: Identifier(
@@ -1390,9 +1415,14 @@ Ok(
             col: 3,
         },
         SpannedToken {
-            kind: DoubleRBracket,
+            kind: RBracket,
             line: 61,
             col: 16,
+        },
+        SpannedToken {
+            kind: RBracket,
+            line: 61,
+            col: 17,
         },
         SpannedToken {
             kind: NewLine,

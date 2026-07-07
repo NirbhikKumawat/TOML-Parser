@@ -4,8 +4,6 @@ pub enum TokenKind {
     Comma,
     LBracket,
     RBracket,
-    DoubleLBracket,
-    DoubleRBracket,
     LBrace,
     RBrace,
     Dot,
