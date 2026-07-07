@@ -1,4 +1,4 @@
-# comment
+# This is a full-line comment
 [root]
 array = ["string",true,false]
 braces = {}
@@ -6,6 +6,54 @@ integer = -100
 float = 3.14
 boolean = true
 
-[root.table]
+[[ArrayOfTables]]
+index=0
+[[ArrayOfTables]]
+index=1
 
+[root.multilinestrings]
+string1 = '''
+This is a multiline literal \n\t\r
+"Good literal it is" \"   ><
 
+Nice string
+'''
+string2 = """
+This is a multinine
+Really a multine string
+
+Nice string
+"""
+
+[root.singlelinestrings]
+string1 = "single line string \t single line string"
+string2 = 'single line literal \n single line literal'
+
+[root.numbers.floats.special]
+float1 = nan
+float2 = +nan
+float3 = -nan
+float4 = inf
+float5 = +inf
+float6 = inf
+float7 = [nan,+nan,-nan]
+float8 = [[nan,+nan,-nan],[inf,-inf,+inf]]
+
+[root.numbers.floats.normal]
+float1 = 3.1415
+float2 = -5.986
+float3 = 1417_1173.1173_1417
+[root.numbers.floats.scientific]
+float1 = 6.6e23
+float2 = -6.6e23
+float3 = +6.6e23
+float4 = 6.6e-23
+float5 = 6.6e+23
+[root.numbers.integer.normal]
+int1 = 247
+int2 = -24074025
+int3 = -24_07_4_025
+[root.numbers.integer.base]
+intb = 0b100101010101
+into = 0o235647235
+inth = 0x34b34cf

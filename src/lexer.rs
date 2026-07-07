@@ -176,14 +176,14 @@ impl Lexer {
                 }
                 b'\'' => {
                     if self.peek() == Some(b'\'') && self.peek_n(2) == Some(b'\'') {
-                        let (s, line, col) = self.read_multiline_string()?;
+                        let (s, line, col) = self.read_multiline_literal()?;
                         tokens.push(SpannedToken {
                             kind: TokenKind::StringLit(s),
                             line,
                             col,
                         });
                     } else {
-                        let (s, line, col) = self.read_string()?;
+                        let (s, line, col) = self.read_literal()?;
                         tokens.push(SpannedToken {
                             kind: TokenKind::StringLit(s),
                             line,
@@ -191,7 +191,7 @@ impl Lexer {
                         });
                     }
                 }
-                b'0'..=b'9' | b'-' | b'+' if !is_alpha(self.peek().unwrap_or(b'\0')) => {
+                b'0'..=b'9' | b'-' | b'+'  => {
                     let (tok, line, col) = self.read_number()?;
                     tokens.push(SpannedToken {
                         kind: tok,
