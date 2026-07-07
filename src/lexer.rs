@@ -171,7 +171,7 @@ impl Lexer {
                         });
                     }
                 }
-                b'0'..=b'9' | b'-' if !is_alpha(self.peek().unwrap_or(b'\0')) => {
+                b'0'..=b'9' | b'-' | b'+' if !is_alpha(self.peek().unwrap_or(b'\0')) => {
                     let (tok, line, col) = self.read_number()?;
                     tokens.push(SpannedToken {
                         kind: tok,
@@ -181,15 +181,29 @@ impl Lexer {
                 }
                 b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                     let (word, line, col) = self.read_identifier();
-                    tokens.push(SpannedToken {
-                        kind: match word.as_str() {
-                            "true" => TokenKind::Boolean(true),
-                            "false" => TokenKind::Boolean(false),
-                            other => TokenKind::Identifier(other.to_string()),
-                        },
-                        line,
-                        col,
-                    });
+                    if word == "inf" {
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::Float(f64::INFINITY),
+                            line,
+                            col,
+                        });
+                    } else if word == "nan" {
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::Float(f64::NAN),
+                            line,
+                            col,
+                        });
+                    } else {
+                        tokens.push(SpannedToken {
+                            kind: match word.as_str() {
+                                "true" => TokenKind::Boolean(true),
+                                "false" => TokenKind::Boolean(false),
+                                other => TokenKind::Identifier(other.to_string()),
+                            },
+                            line,
+                            col,
+                        });
+                    }
                 }
                 _ => {
                     let found = (c as char).to_string();
@@ -413,6 +427,7 @@ impl Lexer {
         let mut s = String::new();
         let mut has_dot = false;
         let mut has_exp = false;
+        let mut is_nega = false;
 
         match self.current() {
             Some(b'0') => match self.peek() {
@@ -575,8 +590,73 @@ impl Lexer {
 
         if let Some(b'-') = self.current() {
             s.push('-');
+            is_nega = true;
+            self.advance();
+        } else if let Some(b'+') = self.current() {
+            s.push('+');
             self.advance();
         }
+
+        match self.current() {
+            Some(b'i') => {
+                if self.peek() == Some(b'n') && self.peek_n(2) == Some(b'f') {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    if let Some(c @ b'a'..=b'z')
+                    | Some(c @ b'A'..=b'Z')
+                    | Some(c @ b'0'..=b'9')
+                    | Some(c @ b'_') = self.current()
+                    {
+                        return Err(ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: format!("invalid character '{}' after inf", c as char),
+                        });
+                    }
+                    let val = if is_nega {
+                        f64::NEG_INFINITY
+                    } else {
+                        f64::INFINITY
+                    };
+                    return Ok((TokenKind::Float(val), start_line, start_col));
+                } else {
+                    return Err(ConfigError::InvalidNumber {
+                        line: start_line,
+                        col: start_col,
+                        detail: "only nan and inf special characters are allowed".to_string(),
+                    });
+                }
+            }
+            Some(b'n') => {
+                if self.peek() == Some(b'a') && self.peek_n(2) == Some(b'n') {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    if let Some(c @ b'a'..=b'z')
+                    | Some(c @ b'A'..=b'Z')
+                    | Some(c @ b'0'..=b'9')
+                    | Some(c @ b'_') = self.current()
+                    {
+                        return Err(ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: format!("invalid character '{}' after nan", c as char),
+                        });
+                    }
+                    let val = if is_nega { -f64::NAN } else { f64::NAN };
+                    return Ok((TokenKind::Float(val), start_line, start_col));
+                } else {
+                    return Err(ConfigError::InvalidNumber {
+                        line: start_line,
+                        col: start_col,
+                        detail: "only nan and inf special characters are allowed".to_string(),
+                    });
+                }
+            }
+            _ => {}
+        }
+
         match self.current() {
             Some(c @ b'0'..=b'9') => {
                 s.push(c as char);
