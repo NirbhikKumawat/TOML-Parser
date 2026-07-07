@@ -137,6 +137,10 @@ impl Parser {
                 TokenKind::LBracket => {
                     current_path = self.parse_table_header()?;
                 }
+                TokenKind::DoubleLBracket => {
+                    current_path = self.parse_array_table_header()?;
+                    self.push_new_array_table(&current_path,&mut pairs)?;
+                }
                 TokenKind::Identifier(key) | TokenKind::StringLit(key) => {
                     self.advance();
                     self.parse_key_value(&current_path, key, &mut pairs)?;
@@ -152,6 +156,64 @@ impl Parser {
             }
         }
         Ok(TomlValue::Table(pairs))
+    }
+    fn parse_array_table_header(&mut self) -> Result<Vec<String>, ConfigError> {
+        self.advance();
+        let mut expect_dot = false;
+        let mut dotted: Vec<String> = Vec::new();
+        let mut line = 0;
+        let mut col = 0;
+        while let Some(token) = self.current().cloned() {
+            if expect_dot {
+                match &token.kind {
+                    TokenKind::DoubleRBracket => {
+                        self.advance();
+                        return Ok(dotted);
+                    }
+                    TokenKind::Dot => {
+                        expect_dot = false;
+                        self.advance();
+                    }
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: token.line,
+                            col: token.col,
+                            expected: "'.' or ']]'".to_string(),
+                            found: format!("{:?}", token.kind),
+                        });
+                    }
+                }
+            } else {
+                match &token.kind {
+                    TokenKind::Identifier(t) => {
+                        dotted.push(t.clone());
+                        expect_dot = true;
+                        self.advance();
+                    }
+                    TokenKind::StringLit(t) => {
+                        dotted.push(t.clone());
+                        expect_dot = true;
+                        self.advance();
+                    }
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: token.line,
+                            col: token.col,
+                            expected: "string or identifier".to_string(),
+                            found: format!("{:?}", token.kind),
+                        });
+                    }
+                }
+            }
+            line = token.line;
+            col = token.col;
+        }
+        Err(ConfigError::ExpectedToken {
+            line,
+            col,
+            expected: "']]'".to_string(),
+            found: "end of the file".to_string(),
+        })
     }
     fn parse_table_header(&mut self) -> Result<Vec<String>, ConfigError> {
         self.advance();
@@ -227,6 +289,18 @@ impl Parser {
                 TomlValue::Table(inner) => {
                     current_root = inner;
                 }
+                TomlValue::Array(arr) => {
+                    if let Some(TomlValue::Table(last_table)) = arr.last_mut() {
+                        current_root = last_table;
+                    }else{
+                        return Err(ConfigError::UnexpectedCharacter {
+                            line: 0,
+                            col: 0,
+                            expected: "an array of tables".to_string(),
+                            found: "an empty or non-table array".to_string(),
+                        });
+                    }
+                }
                 _ => {
                     return Err(ConfigError::UnexpectedCharacter {
                         line: 0,
@@ -261,5 +335,60 @@ impl Parser {
         let value = self.parse_value()?;
         current_root.insert(key.clone(), value);
         Ok(())
+    }
+    fn push_new_array_table(&mut self,path:&Vec<String>,root:&mut HashMap<String, TomlValue>) -> Result<(), ConfigError> {
+        if path.is_empty() {
+            return Ok(());
+        }
+        let mut current_root = root;
+
+        for i in 0..path.len() -1 {
+            let header = &path[i];
+            let next_node = current_root
+                .entry(header.clone())
+                .or_insert_with(|| TomlValue::Table(HashMap::new()));
+
+            match next_node {
+                TomlValue::Table(inner) => {
+                    current_root = inner;
+                }
+                TomlValue::Array(arr) => {
+                    if let Some(TomlValue::Table(last_table)) = arr.last_mut() {
+                        current_root = last_table;
+                    }else {
+                        return Err(ConfigError::UnexpectedCharacter {
+                            line: 0,
+                            col: 0,
+                            expected: "valid array table".to_string(),
+                            found: "invalid array table".to_string(),
+                        })
+                    }
+                }
+                _ => {
+                    return Err(ConfigError::UnexpectedCharacter {
+                        line: 0,
+                        col: 0,
+                        expected: "valid array table".to_string(),
+                        found: "invalid array table".to_string(),
+                    })
+                }
+            }
+        }
+        let last_key = path.last().unwrap();
+        let target = current_root
+            .entry(last_key.clone())
+            .or_insert_with(|| TomlValue::Array(Vec::new()));
+        match target {
+            TomlValue::Array(arr) => {
+                arr.push(TomlValue::Table(HashMap::new()));
+                Ok(())
+            }
+            _ => Err(ConfigError::UnexpectedCharacter {
+                line: 0,
+                col: 0,
+                expected: "an array".to_string(),
+                found: "a statically defined table or value".to_string(),
+            })
+        }
     }
 }
