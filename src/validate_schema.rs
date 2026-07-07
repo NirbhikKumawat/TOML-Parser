@@ -130,9 +130,9 @@ fn validate_string(
                 col: 0,
                 expected: "boolean".to_string(),
                 found: "non boolean".to_string(),
-                });
-            }
+            });
         }
+    }
     Ok(())
 }
 

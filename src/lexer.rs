@@ -393,161 +393,163 @@ impl Lexer {
         let mut has_exp = false;
         let mut is_nega = false;
 
-        if let Some(b'0') = self.current() { match self.peek() {
-            Some(b'x') => {
-                self.advance();
-                self.advance();
-                loop {
-                    match self.current() {
-                        Some(c @ b'0'..=b'9')
-                        | Some(c @ b'a'..=b'f')
-                        | Some(c @ b'A'..=b'F') => {
-                            s.push(c as char);
-                            self.advance();
-                        }
-                        Some(b'_') => {
-                            match self.peek() {
-                                Some(b'0'..=b'9') | Some(b'a'..=b'f') | Some(b'A'..=b'F') => {}
+        if let Some(b'0') = self.current() {
+            match self.peek() {
+                Some(b'x') => {
+                    self.advance();
+                    self.advance();
+                    loop {
+                        match self.current() {
+                            Some(c @ b'0'..=b'9')
+                            | Some(c @ b'a'..=b'f')
+                            | Some(c @ b'A'..=b'F') => {
+                                s.push(c as char);
+                                self.advance();
+                            }
+                            Some(b'_') => {
+                                match self.peek() {
+                                    Some(b'0'..=b'9') | Some(b'a'..=b'f') | Some(b'A'..=b'F') => {}
+                                    _ => {
+                                        return Err(ConfigError::InvalidNumber {
+                                            line: start_line,
+                                            col: start_col,
+                                            detail: "underscore should have numbers on both ends"
+                                                .to_string(),
+                                        });
+                                    }
+                                }
+                                self.advance();
+                            }
+                            Some(c) => match c {
+                                b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
+                                    break;
+                                }
                                 _ => {
                                     return Err(ConfigError::InvalidNumber {
                                         line: start_line,
                                         col: start_col,
-                                        detail: "underscore should have numbers on both ends"
-                                            .to_string(),
+                                        detail: format!(
+                                            "invalid character '{}' in hexadecimal number",
+                                            c as char
+                                        ),
                                     });
                                 }
-                            }
-                            self.advance();
+                            },
+                            None => break,
                         }
-                        Some(c) => match c {
-                            b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
-                                break;
-                            }
-                            _ => {
-                                return Err(ConfigError::InvalidNumber {
-                                    line: start_line,
-                                    col: start_col,
-                                    detail: format!(
-                                        "invalid character '{}' in hexadecimal number",
-                                        c as char
-                                    ),
-                                });
-                            }
-                        },
-                        None => break,
                     }
+                    let value = i64::from_str_radix(s.as_str(), 16).map_err(|_| {
+                        ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: "invalid hexadecimal number".to_string(),
+                        }
+                    })?;
+                    return Ok((TokenKind::Integer(value), start_line, start_col));
                 }
-                let value = i64::from_str_radix(s.as_str(), 16).map_err(|_| {
-                    ConfigError::InvalidNumber {
-                        line: start_line,
-                        col: start_col,
-                        detail: "invalid hexadecimal number".to_string(),
-                    }
-                })?;
-                return Ok((TokenKind::Integer(value), start_line, start_col));
-            }
-            Some(b'b') => {
-                self.advance();
-                self.advance();
-                loop {
-                    match self.current() {
-                        Some(c @ b'0'..=b'1') => {
-                            s.push(c as char);
-                            self.advance();
-                        }
-                        Some(b'_') => {
-                            match self.peek() {
-                                Some(b'0'..=b'1') => {}
+                Some(b'b') => {
+                    self.advance();
+                    self.advance();
+                    loop {
+                        match self.current() {
+                            Some(c @ b'0'..=b'1') => {
+                                s.push(c as char);
+                                self.advance();
+                            }
+                            Some(b'_') => {
+                                match self.peek() {
+                                    Some(b'0'..=b'1') => {}
+                                    _ => {
+                                        return Err(ConfigError::InvalidNumber {
+                                            line: start_line,
+                                            col: start_col,
+                                            detail: "underscore should have numbers on both ends"
+                                                .to_string(),
+                                        });
+                                    }
+                                }
+                                self.advance();
+                            }
+                            Some(c) => match c {
+                                b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
+                                    break;
+                                }
                                 _ => {
                                     return Err(ConfigError::InvalidNumber {
                                         line: start_line,
                                         col: start_col,
-                                        detail: "underscore should have numbers on both ends"
-                                            .to_string(),
+                                        detail: format!(
+                                            "invalid character '{}' in binary number",
+                                            c as char
+                                        ),
                                     });
                                 }
-                            }
-                            self.advance();
+                            },
+                            None => break,
                         }
-                        Some(c) => match c {
-                            b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
-                                break;
-                            }
-                            _ => {
-                                return Err(ConfigError::InvalidNumber {
-                                    line: start_line,
-                                    col: start_col,
-                                    detail: format!(
-                                        "invalid character '{}' in binary number",
-                                        c as char
-                                    ),
-                                });
-                            }
-                        },
-                        None => break,
                     }
+                    let value = i64::from_str_radix(s.as_str(), 2).map_err(|_| {
+                        ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: "invalid binary number".to_string(),
+                        }
+                    })?;
+                    return Ok((TokenKind::Integer(value), start_line, start_col));
                 }
-                let value = i64::from_str_radix(s.as_str(), 2).map_err(|_| {
-                    ConfigError::InvalidNumber {
-                        line: start_line,
-                        col: start_col,
-                        detail: "invalid binary number".to_string(),
-                    }
-                })?;
-                return Ok((TokenKind::Integer(value), start_line, start_col));
-            }
-            Some(b'o') => {
-                self.advance();
-                self.advance();
-                loop {
-                    match self.current() {
-                        Some(c @ b'0'..=b'7') => {
-                            s.push(c as char);
-                            self.advance();
-                        }
-                        Some(b'_') => {
-                            match self.peek() {
-                                Some(b'0'..=b'7') => {}
+                Some(b'o') => {
+                    self.advance();
+                    self.advance();
+                    loop {
+                        match self.current() {
+                            Some(c @ b'0'..=b'7') => {
+                                s.push(c as char);
+                                self.advance();
+                            }
+                            Some(b'_') => {
+                                match self.peek() {
+                                    Some(b'0'..=b'7') => {}
+                                    _ => {
+                                        return Err(ConfigError::InvalidNumber {
+                                            line: start_line,
+                                            col: start_col,
+                                            detail: "underscore should have numbers on both ends"
+                                                .to_string(),
+                                        });
+                                    }
+                                }
+                                self.advance();
+                            }
+                            Some(c) => match c {
+                                b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
+                                    break;
+                                }
                                 _ => {
                                     return Err(ConfigError::InvalidNumber {
                                         line: start_line,
                                         col: start_col,
-                                        detail: "underscore should have numbers on both ends"
-                                            .to_string(),
+                                        detail: format!(
+                                            "invalid character '{}' in octal number",
+                                            c as char
+                                        ),
                                     });
                                 }
-                            }
-                            self.advance();
+                            },
+                            None => break,
                         }
-                        Some(c) => match c {
-                            b' ' | b'\t' | b'\n' | b'\r' | b',' | b']' | b'}' | b'#' => {
-                                break;
-                            }
-                            _ => {
-                                return Err(ConfigError::InvalidNumber {
-                                    line: start_line,
-                                    col: start_col,
-                                    detail: format!(
-                                        "invalid character '{}' in octal number",
-                                        c as char
-                                    ),
-                                });
-                            }
-                        },
-                        None => break,
                     }
+                    let value = i64::from_str_radix(s.as_str(), 8).map_err(|_| {
+                        ConfigError::InvalidNumber {
+                            line: start_line,
+                            col: start_col,
+                            detail: "invalid octal number".to_string(),
+                        }
+                    })?;
+                    return Ok((TokenKind::Integer(value), start_line, start_col));
                 }
-                let value = i64::from_str_radix(s.as_str(), 8).map_err(|_| {
-                    ConfigError::InvalidNumber {
-                        line: start_line,
-                        col: start_col,
-                        detail: "invalid octal number".to_string(),
-                    }
-                })?;
-                return Ok((TokenKind::Integer(value), start_line, start_col));
+                _ => {}
             }
-            _ => {}
-        } }
+        }
 
         if let Some(b'-') = self.current() {
             s.push('-');
@@ -587,7 +589,7 @@ impl Lexer {
                         col: start_col,
                         detail: "only nan and inf special characters are allowed".to_string(),
                     })
-                }
+                };
             }
             Some(b'n') => {
                 return if self.peek() == Some(b'a') && self.peek_n(2) == Some(b'n') {
@@ -613,7 +615,7 @@ impl Lexer {
                         col: start_col,
                         detail: "only nan and inf special characters are allowed".to_string(),
                     })
-                }
+                };
             }
             _ => {}
         }

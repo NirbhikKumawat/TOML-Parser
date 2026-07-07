@@ -276,7 +276,7 @@ impl Parser {
     fn parse_key_value(
         &mut self,
         path: &Vec<String>,
-        key: &String,
+        key: &str,
         root: &mut HashMap<String, TomlValue>,
     ) -> Result<(), ConfigError> {
         let mut current_root = root;
@@ -328,17 +328,17 @@ impl Parser {
                 return Err(ConfigError::MissingValue {
                     line: 0,
                     col: 1,
-                    key: key.clone(),
+                    key: key.parse().unwrap(),
                 });
             }
         }
         let value = self.parse_value()?;
-        current_root.insert(key.clone(), value);
+        current_root.insert(key.parse().unwrap(), value);
         Ok(())
     }
     fn push_new_array_table(
         &mut self,
-        path: &Vec<String>,
+        path: &[String],
         root: &mut HashMap<String, TomlValue>,
     ) -> Result<(), ConfigError> {
         if path.is_empty() {
@@ -346,8 +346,7 @@ impl Parser {
         }
         let mut current_root = root;
 
-        for i in 0..path.len() - 1 {
-            let header = &path[i];
+        for header in path.iter().take(path.len().saturating_sub(1)) {
             let next_node = current_root
                 .entry(header.clone())
                 .or_insert_with(|| TomlValue::Table(HashMap::new()));

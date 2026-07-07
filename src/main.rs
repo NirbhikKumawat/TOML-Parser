@@ -48,7 +48,7 @@ fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
         Err(e) => return Err(vec![e]),
     };
 
-    validate(&schema,config_map).map_err(|e| vec![e])?;
+    validate(&schema, config_map).map_err(|e| vec![e])?;
     println!("Config is valid!");
 
     println!("Parsed Configuration:\n{:#?}", config_value);
