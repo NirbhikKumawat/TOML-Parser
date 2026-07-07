@@ -98,20 +98,40 @@ impl Lexer {
                     self.advance();
                 }
                 b'[' => {
-                    tokens.push(SpannedToken {
-                        kind: TokenKind::LBracket,
-                        line: self.line,
-                        col: self.col,
-                    });
-                    self.advance();
+                    if self.peek() == Some(b'[') {
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::DoubleLBracket,
+                            line: self.line,
+                            col: self.col,
+                        });
+                        self.advance();
+                        self.advance();
+                    } else {
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::LBracket,
+                            line: self.line,
+                            col: self.col,
+                        });
+                        self.advance();
+                    }
                 }
                 b']' => {
-                    tokens.push(SpannedToken {
-                        kind: TokenKind::RBracket,
-                        line: self.line,
-                        col: self.col,
-                    });
-                    self.advance();
+                    if self.peek() == Some(b']') {
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::DoubleRBracket,
+                            line: self.line,
+                            col: self.col,
+                        });
+                        self.advance();
+                        self.advance();
+                    } else {
+                        tokens.push(SpannedToken {
+                            kind: TokenKind::RBracket,
+                            line: self.line,
+                            col: self.col,
+                        });
+                        self.advance();
+                    }
                 }
                 b'{' => {
                     tokens.push(SpannedToken {
