@@ -48,7 +48,7 @@ fn run(config_path: &str, schema_path: &str) -> Result<(), Vec<ConfigError>> {
         Err(e) => return Err(vec![e]),
     };
 
-    validate(&schema, &config_map).map_err(|e| vec![e])?;
+    validate(&schema,config_map).map_err(|e| vec![e])?;
     println!("Config is valid!");
 
     println!("Parsed Configuration:\n{:#?}", config_value);
@@ -71,10 +71,7 @@ fn main() {
     match run(&config_path, &schema_path) {
         Ok(()) => {}
         Err(errors) => {
-            let source = match fs::read_to_string(&config_path) {
-                Ok(s) => s,
-                Err(_) => String::new(),
-            };
+            let source = fs::read_to_string(&config_path).unwrap_or_else(|_| String::new());
             for err in &errors {
                 eprintln!("{}", format_error(err, &source));
                 eprintln!();

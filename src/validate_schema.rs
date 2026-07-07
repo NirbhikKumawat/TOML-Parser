@@ -11,44 +11,35 @@ fn validate_integer(
     key: &String,
     n: &i64,
 ) -> Result<(), ConfigError> {
-    match min {
-        Some(i) => {
-            if n < i {
-                return Err(ConfigError::SchemaViolation {
-                    line: 0,
-                    key: key.clone(),
-                    expected: format!(">= {}", i),
-                    found: i.to_string(),
-                });
-            }
+    if let Some(i) = min {
+        if n < i {
+            return Err(ConfigError::SchemaViolation {
+                line: 0,
+                key: key.clone(),
+                expected: format!(">= {}", i),
+                found: i.to_string(),
+            });
         }
-        _ => {}
     }
-    match max {
-        Some(i) => {
-            if n > i {
-                return Err(ConfigError::SchemaViolation {
-                    line: 0,
-                    key: key.clone(),
-                    expected: format!("<= {}", i),
-                    found: i.to_string(),
-                });
-            }
+    if let Some(i) = max {
+        if n > i {
+            return Err(ConfigError::SchemaViolation {
+                line: 0,
+                key: key.clone(),
+                expected: format!("<= {}", i),
+                found: i.to_string(),
+            });
         }
-        _ => {}
     }
-    match allowed_values {
-        Some(v) => {
-            if !v.contains(&TomlValue::Integer(*n)) {
-                return Err(ConfigError::ExpectedToken {
-                    line: 0,
-                    col: 0,
-                    expected: "boolean".to_string(),
-                    found: "non boolean".to_string(),
-                });
-            }
+    if let Some(v) = allowed_values {
+        if !v.contains(&TomlValue::Integer(*n)) {
+            return Err(ConfigError::ExpectedToken {
+                line: 0,
+                col: 0,
+                expected: "boolean".to_string(),
+                found: "non boolean".to_string(),
+            });
         }
-        _ => {}
     }
     Ok(())
 }
@@ -59,44 +50,35 @@ fn validate_float(
     key: &String,
     n: &f64,
 ) -> Result<(), ConfigError> {
-    match min {
-        Some(i) => {
-            if n < &i {
-                return Err(ConfigError::SchemaViolation {
-                    line: 0,
-                    key: key.clone(),
-                    expected: format!(">= {}", i),
-                    found: i.to_string(),
-                });
-            }
+    if let Some(i) = min {
+        if n < i {
+            return Err(ConfigError::SchemaViolation {
+                line: 0,
+                key: key.clone(),
+                expected: format!(">= {}", i),
+                found: i.to_string(),
+            });
         }
-        _ => {}
     }
-    match max {
-        Some(i) => {
-            if n > &i {
-                return Err(ConfigError::SchemaViolation {
-                    line: 0,
-                    key: key.clone(),
-                    expected: format!("<= {}", i),
-                    found: i.to_string(),
-                });
-            }
+    if let Some(i) = max {
+        if n > i {
+            return Err(ConfigError::SchemaViolation {
+                line: 0,
+                key: key.clone(),
+                expected: format!("<= {}", i),
+                found: i.to_string(),
+            });
         }
-        _ => {}
     }
-    match allowed_values {
-        Some(v) => {
-            if !v.contains(&TomlValue::Float(*n)) {
-                return Err(ConfigError::ExpectedToken {
-                    line: 0,
-                    col: 0,
-                    expected: "boolean".to_string(),
-                    found: "non boolean".to_string(),
-                });
-            }
+    if let Some(v) = allowed_values {
+        if !v.contains(&TomlValue::Float(*n)) {
+            return Err(ConfigError::ExpectedToken {
+                line: 0,
+                col: 0,
+                expected: "boolean".to_string(),
+                found: "non boolean".to_string(),
+            });
         }
-        _ => {}
     }
 
     Ok(())
@@ -109,60 +91,48 @@ fn validate_string(
     key: &String,
     s: &String,
 ) -> Result<(), ConfigError> {
-    match min {
-        Some(i) => {
-            if s.len() < *i {
-                return Err(ConfigError::SchemaViolation {
-                    line: 0,
-                    key: key.clone(),
-                    expected: format!(">= {}", i),
-                    found: i.to_string(),
-                });
-            }
+    if let Some(i) = min {
+        if s.len() < *i {
+            return Err(ConfigError::SchemaViolation {
+                line: 0,
+                key: key.clone(),
+                expected: format!(">= {}", i),
+                found: i.to_string(),
+            });
         }
-        _ => {}
     }
-    match max {
-        Some(i) => {
-            if s.len() > *i {
-                return Err(ConfigError::SchemaViolation {
-                    line: 0,
-                    key: key.clone(),
-                    expected: format!("<= {}", i),
-                    found: i.to_string(),
-                });
-            }
+    if let Some(i) = max {
+        if s.len() > *i {
+            return Err(ConfigError::SchemaViolation {
+                line: 0,
+                key: key.clone(),
+                expected: format!("<= {}", i),
+                found: i.to_string(),
+            });
         }
-        _ => {}
     }
-    match pattern {
-        Some(p) => {
-            let re = Regex::new(&p).unwrap();
-            if !re.is_match(&s) {
-                return Err(ConfigError::ExpectedToken {
-                    line: 0,
-                    col: 0,
-                    expected: "boolean".to_string(),
-                    found: "non boolean".to_string(),
-                });
-            }
+    if let Some(p) = pattern {
+        let re = Regex::new(p).unwrap();
+        if !re.is_match(s) {
+            return Err(ConfigError::ExpectedToken {
+                line: 0,
+                col: 0,
+                expected: "boolean".to_string(),
+                found: "non boolean".to_string(),
+            });
         }
-        _ => {}
     }
 
-    match allowed_values {
-        Some(v) => {
-            if !v.contains(&TomlValue::String(s.clone())) {
-                return Err(ConfigError::ExpectedToken {
-                    line: 0,
-                    col: 0,
-                    expected: "boolean".to_string(),
-                    found: "non boolean".to_string(),
+    if let Some(v) = allowed_values {
+        if !v.contains(&TomlValue::String(s.clone())) {
+            return Err(ConfigError::ExpectedToken {
+                line: 0,
+                col: 0,
+                expected: "boolean".to_string(),
+                found: "non boolean".to_string(),
                 });
             }
         }
-        _ => {}
-    }
     Ok(())
 }
 

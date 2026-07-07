@@ -139,7 +139,7 @@ impl Parser {
                 }
                 TokenKind::DoubleLBracket => {
                     current_path = self.parse_array_table_header()?;
-                    self.push_new_array_table(&current_path,&mut pairs)?;
+                    self.push_new_array_table(&current_path, &mut pairs)?;
                 }
                 TokenKind::Identifier(key) | TokenKind::StringLit(key) => {
                     self.advance();
@@ -292,7 +292,7 @@ impl Parser {
                 TomlValue::Array(arr) => {
                     if let Some(TomlValue::Table(last_table)) = arr.last_mut() {
                         current_root = last_table;
-                    }else{
+                    } else {
                         return Err(ConfigError::UnexpectedCharacter {
                             line: 0,
                             col: 0,
@@ -336,13 +336,17 @@ impl Parser {
         current_root.insert(key.clone(), value);
         Ok(())
     }
-    fn push_new_array_table(&mut self,path:&Vec<String>,root:&mut HashMap<String, TomlValue>) -> Result<(), ConfigError> {
+    fn push_new_array_table(
+        &mut self,
+        path: &Vec<String>,
+        root: &mut HashMap<String, TomlValue>,
+    ) -> Result<(), ConfigError> {
         if path.is_empty() {
             return Ok(());
         }
         let mut current_root = root;
 
-        for i in 0..path.len() -1 {
+        for i in 0..path.len() - 1 {
             let header = &path[i];
             let next_node = current_root
                 .entry(header.clone())
@@ -355,13 +359,13 @@ impl Parser {
                 TomlValue::Array(arr) => {
                     if let Some(TomlValue::Table(last_table)) = arr.last_mut() {
                         current_root = last_table;
-                    }else {
+                    } else {
                         return Err(ConfigError::UnexpectedCharacter {
                             line: 0,
                             col: 0,
                             expected: "valid array table".to_string(),
                             found: "invalid array table".to_string(),
-                        })
+                        });
                     }
                 }
                 _ => {
@@ -370,7 +374,7 @@ impl Parser {
                         col: 0,
                         expected: "valid array table".to_string(),
                         found: "invalid array table".to_string(),
-                    })
+                    });
                 }
             }
         }
@@ -388,7 +392,7 @@ impl Parser {
                 col: 0,
                 expected: "an array".to_string(),
                 found: "a statically defined table or value".to_string(),
-            })
+            }),
         }
     }
 }

@@ -18,7 +18,7 @@ pub fn display(value: &TomlValue) -> String {
         TomlValue::Integer(i) => format!("{}", i),
         TomlValue::Float(f) => format!("{}", f),
         TomlValue::Boolean(b) => format!("{}", b),
-        TomlValue::DateTime(d) => format!("{}", d),
+        TomlValue::DateTime(d) => d.to_string(),
         TomlValue::Array(arr) => {
             let mut result = String::from("[");
             let mut first = true;
@@ -29,7 +29,7 @@ pub fn display(value: &TomlValue) -> String {
                 first = false;
                 result.push_str(format!("{:?}", i).as_str());
             }
-            result.push_str("]");
+            result.push(']');
             result
         }
         TomlValue::Table(pairs) => {
@@ -42,7 +42,7 @@ pub fn display(value: &TomlValue) -> String {
                 result.push_str(&format!("{}: {}", key, display(value)));
                 first = false;
             }
-            result.push_str("}");
+            result.push('}');
             result
         }
     }
