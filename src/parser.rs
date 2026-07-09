@@ -118,6 +118,10 @@ impl Parser {
                         found: "end of input".to_string(),
                     })
                 }
+                TokenKind::LBrace => {
+                    self.advance();
+                    self.parse_inline_table()
+                }
                 _ => Err(ConfigError::ExpectedToken {
                     line: t.line,
                     col: t.col,
@@ -143,6 +147,8 @@ impl Parser {
                 }
                 TokenKind::LBracket => match self.peek() {
                     Some(TokenKind::LBracket) => {
+                        self.advance();
+                        self.advance();
                         current_path = self.parse_array_table_header()?;
                         self.push_new_array_table(&current_path, &mut pairs)?;
                     }
@@ -167,7 +173,7 @@ impl Parser {
         Ok(TomlValue::Table(pairs))
     }
     fn parse_array_table_header(&mut self) -> Result<Vec<String>, ConfigError> {
-        self.advance();
+        //self.advance();
         let mut expect_dot = false;
         let mut dotted: Vec<String> = Vec::new();
         let mut line = 0;
@@ -243,6 +249,91 @@ impl Parser {
             col,
             expected: "']]'".to_string(),
             found: "end of the file".to_string(),
+        })
+    }
+    fn parse_inline_table(&mut self) -> Result<TomlValue, ConfigError> {
+        let mut map: HashMap<String, TomlValue> = HashMap::new();
+        let mut expect_comma = false;
+
+        while let Some(token) = self.current().cloned() {
+            if expect_comma {
+                match token.kind {
+                    TokenKind::Comma => {
+                        expect_comma = false;
+                        self.advance();
+                    }
+                    TokenKind::RBrace => {
+                        self.advance();
+                        return Ok(TomlValue::Table(map));
+                    }
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: token.line,
+                            col: token.col,
+                            expected: "',' or '}'".to_string(),
+                            found: format!("{:?}", token.kind),
+                        });
+                    }
+                }
+            } else {
+                match token.kind {
+                    TokenKind::RBrace => {
+                        if !map.is_empty() {
+                            return Err(ConfigError::UnexpectedCharacter {
+                                line: token.line,
+                                col: token.col,
+                                expected: "key-value pair(no trailing commas allowed)".to_string(),
+                                found: "'}'".to_string(),
+                            });
+                        }
+                        self.advance();
+                        return Ok(TomlValue::Table(map));
+                    }
+                    TokenKind::Identifier(ref key) | TokenKind::StringLit(ref key) => {
+                        let key_clone = key.clone();
+                        self.advance();
+
+                        match self.current() {
+                            Some(t) if t.kind == TokenKind::Equal => {
+                                self.advance();
+                            }
+                            Some(t) => {
+                                return Err(ConfigError::ExpectedToken {
+                                    line: t.line,
+                                    col: t.col,
+                                    expected: "=".to_string(),
+                                    found: format!("{:?}", t.kind),
+                                });
+                            }
+                            None => {
+                                return Err(ConfigError::MissingValue {
+                                    line: token.line,
+                                    col: token.col,
+                                    key: key_clone,
+                                });
+                            }
+                        }
+
+                        let val = self.parse_value()?;
+                        map.insert(key_clone, val);
+                        expect_comma = true;
+                    }
+                    _ => {
+                        return Err(ConfigError::ExpectedToken {
+                            line: token.line,
+                            col: token.col,
+                            expected: "string, identifier, or '}'".to_string(),
+                            found: format!("{:?}", token.kind),
+                        });
+                    }
+                }
+            }
+        }
+        Err(ConfigError::UnexpectedCharacter {
+            line: 0,
+            col: 0,
+            expected: "}".to_string(),
+            found: "end of input".to_string(),
         })
     }
     fn parse_table_header(&mut self) -> Result<Vec<String>, ConfigError> {

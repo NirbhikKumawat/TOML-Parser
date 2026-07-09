@@ -1,7 +1,7 @@
 # This is a full-line comment
 [root]
 array = ["string",true,false]
-braces = {}
+braces = { key = "value"}
 integer = -100
 float = 3.14
 boolean = true
