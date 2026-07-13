@@ -1,4 +1,5 @@
 pub mod config_error;
+pub mod config_get_error;
 pub mod field;
 pub mod lexer;
 pub mod parse_schema;

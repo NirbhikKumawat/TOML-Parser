@@ -86,7 +86,7 @@ Nice string
 }
 
 #[test]
-fn lexer_middle_multiline_literal(){
+fn lexer_middle_multiline_literal() {
     let toml = r#"string1 = '''
 This is a mult'ili'ne literal \n\t\r
 "Good literal it is" \"   ><

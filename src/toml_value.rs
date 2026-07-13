@@ -1,3 +1,4 @@
+use crate::config_get_error::ConfigGetError;
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -56,5 +57,61 @@ pub fn toml_type_name(value: &TomlValue) -> &'static str {
         TomlValue::Table(_) => "table",
         TomlValue::Array(_) => "array",
         TomlValue::DateTime(_) => "datetime",
+    }
+}
+
+impl TomlValue {
+    pub fn get(&self, key: &str) -> Result<&TomlValue, ConfigGetError> {
+        match self {
+            TomlValue::Table(map) => map.get(key).ok_or_else(|| ConfigGetError::MissingKey {
+                key: key.to_string(),
+            }),
+            actual => Err(ConfigGetError::TypeMismatch {
+                path: key.to_string(),
+                expected: "table".to_string(),
+                found: toml_type_name(actual).to_string(),
+            }),
+        }
+    }
+    pub fn as_bool(&self, key: &str) -> Result<bool, ConfigGetError> {
+        match self.get(key)? {
+            TomlValue::Boolean(b) => Ok(*b),
+            actual => Err(ConfigGetError::TypeMismatch {
+                path: key.to_string(),
+                expected: "boolean".to_string(),
+                found: toml_type_name(actual).to_string(),
+            }),
+        }
+    }
+    pub fn as_float(&self, key: &str) -> Result<f64, ConfigGetError> {
+        match self.get(key)? {
+            TomlValue::Float(f) => Ok(*f),
+            actual => Err(ConfigGetError::TypeMismatch {
+                path: key.to_string(),
+                expected: "float".to_string(),
+                found: toml_type_name(actual).to_string(),
+            }),
+        }
+    }
+    pub fn as_int(&self, key: &str) -> Result<i64, ConfigGetError> {
+        match self.get(key)? {
+            TomlValue::Integer(i) => Ok(*i),
+            actual => Err(ConfigGetError::TypeMismatch {
+                path: key.to_string(),
+                expected: "integer".to_string(),
+                found: toml_type_name(actual).to_string(),
+            }),
+        }
+    }
+
+    pub fn as_str(&self, key: &str) -> Result<&str, ConfigGetError> {
+        match self.get(key)? {
+            TomlValue::String(s) => Ok(s.as_str()),
+            actual => Err(ConfigGetError::TypeMismatch {
+                path: key.to_string(),
+                expected: "string".to_string(),
+                found: toml_type_name(actual).to_string(),
+            }),
+        }
     }
 }

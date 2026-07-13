@@ -16,7 +16,7 @@ fn test_float_underscores() {
     assert_debug_snapshot!(tokens);
 }
 #[test]
-fn test_float_underscore_start(){
+fn test_float_underscore_start() {
     let toml = "float = _3.1415";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -24,7 +24,7 @@ fn test_float_underscore_start(){
 }
 
 #[test]
-fn test_float_underscore_end(){
+fn test_float_underscore_end() {
     let toml = "float = 3.1415_";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -32,7 +32,7 @@ fn test_float_underscore_end(){
 }
 
 #[test]
-fn test_float_underscore_before_dot(){
+fn test_float_underscore_before_dot() {
     let toml = "float = 3_.1415";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -40,7 +40,7 @@ fn test_float_underscore_before_dot(){
 }
 
 #[test]
-fn test_float_underscore_after_dot(){
+fn test_float_underscore_after_dot() {
     let toml = "float = 3._1415";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -48,7 +48,7 @@ fn test_float_underscore_after_dot(){
 }
 
 #[test]
-fn test_float_special(){
+fn test_float_special() {
     let toml = "float = nan";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -56,7 +56,7 @@ fn test_float_special(){
 }
 
 #[test]
-fn test_float_special_sign(){
+fn test_float_special_sign() {
     let toml = "float = -inf";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -71,7 +71,7 @@ fn test_float_scientific() {
     assert_debug_snapshot!(tokens);
 }
 #[test]
-fn test_float_scientific_exponent_sign(){
+fn test_float_scientific_exponent_sign() {
     let toml = "float = 6.6e+23";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -79,7 +79,7 @@ fn test_float_scientific_exponent_sign(){
 }
 
 #[test]
-fn test_float_scientific_exponent_underscore(){
+fn test_float_scientific_exponent_underscore() {
     let toml = "float = 6.6e+2_3";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();

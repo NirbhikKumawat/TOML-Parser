@@ -41,7 +41,7 @@ fn lexer_underscore_integer() {
 }
 
 #[test]
-fn lexer_binary_underscore(){
+fn lexer_binary_underscore() {
     let toml = "intb = 0b100_1010_10_101";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -49,7 +49,7 @@ fn lexer_binary_underscore(){
 }
 
 #[test]
-fn lexer_hex_underscore(){
+fn lexer_hex_underscore() {
     let toml = "inth = 0x34_b34_cf";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
@@ -57,7 +57,7 @@ fn lexer_hex_underscore(){
 }
 
 #[test]
-fn lexer_octal_underscore(){
+fn lexer_octal_underscore() {
     let toml = "into = 0o2_35_64723_5";
     let mut lexer = Lexer::new(toml);
     let tokens = lexer.tokenize();
