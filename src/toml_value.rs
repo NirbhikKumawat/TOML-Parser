@@ -73,6 +73,26 @@ impl TomlValue {
             }),
         }
     }
+    pub fn get_at_index(&self, path: &str, index: usize) -> Result<&TomlValue, ConfigGetError> {
+        match self.get(path)? {
+            TomlValue::Array(arr) => {
+                if index < arr.len() {
+                    Ok(&arr[index])
+                } else {
+                    Err(ConfigGetError::IndexOutOfBounds {
+                        path: format!("{}[{}]", path, index),
+                        index,
+                        len: arr.len(),
+                    })
+                }
+            }
+            actual => Err(ConfigGetError::TypeMismatch {
+                path: path.to_string(),
+                expected: "array".to_string(),
+                found: toml_type_name(actual).to_string(),
+            }),
+        }
+    }
     pub fn as_bool(&self, key: &str) -> Result<bool, ConfigGetError> {
         match self.get(key)? {
             TomlValue::Boolean(b) => Ok(*b),
